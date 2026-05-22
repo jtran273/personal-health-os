@@ -8,8 +8,9 @@ OpenClaw is the daily interface. This app is the source-agnostic backend and eve
 
 - Next.js App Router skeleton with TypeScript.
 - Source-agnostic health domain model in `src/lib/health`.
-- Safe provider stubs for Oura, HealthKit, and OpenClaw ingestion.
-- Placeholder API routes for daily ledger reads, meal ingestion, and Oura sync.
+- Local-first raw health event ledger under `src/lib/health/ledger`.
+- Basic normalization from raw Oura/OpenClaw events into daily ledgers.
+- API routes for daily ledger reads, meal ingestion, and Oura sync backed by local JSONL storage.
 - Native SwiftUI iOS app under `ios/BodyOS` with verified real-device HealthKit ingestion.
 - Product and architecture docs under `docs/`.
 
@@ -55,3 +56,25 @@ OPENCLAW_INGESTION_TOKEN=
 ```
 
 Do not commit real tokens.
+
+## Local Health Ledger
+
+Development writes raw provider events to `.data/health-events.jsonl` by default. The file is git-ignored and is meant for local iteration only. Each event keeps its raw provider payload internally, while public summary routes return normalized meals and ledger metrics without echoing raw payloads.
+
+Useful local calls:
+
+```bash
+curl "http://localhost:3000/api/health/daily-ledger?date=2026-05-21"
+curl "http://localhost:3000/api/health/meals?date=2026-05-21"
+curl -X POST "http://localhost:3000/api/health/meals" \
+  -H "content-type: application/json" \
+  -d '{"text":"eggs and toast","loggedAt":"2026-05-21T15:00:00.000Z"}'
+```
+
+Reset local dev health data:
+
+```bash
+rm -f .data/health-events.jsonl
+```
+
+To store the dev ledger somewhere else, set `HEALTH_LEDGER_PATH=/absolute/path/events.jsonl`.

@@ -16,6 +16,12 @@ Version 2 connects body, diet, budget, and calendar. The foundation starts with 
 - Return simple JSON API responses for future OpenClaw and frontend clients.
 - Keep the frontend as a placeholder until Claude Designer provides the designed UI.
 
+## Backend Persistence Milestone
+
+The first backend persistence milestone uses a local-first raw event ledger instead of a production database. Development data lives in `.data/health-events.jsonl`, is git-ignored, and can be deleted to reset local state. Provider payloads are retained for reprocessing, but public daily summary responses expose only normalized ledger fields and meal summaries.
+
+This milestone should be treated as a durable contract test for source independence, not as the final production storage choice.
+
 ## Out of Scope for MVP
 
 - Auth and account management.

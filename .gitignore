@@ -4,6 +4,7 @@ node_modules/
 out/
 coverage/
 dist/
+.data/
 
 .env
 .env*.local
