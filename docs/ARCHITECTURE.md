@@ -67,3 +67,14 @@ The body mode classifier combines readiness, sleep, temperature deviation, stres
 - Red: recovery debt or illness/stress signal; bias toward rest, simple food, and fewer commitments.
 
 The classifier is intentionally conservative. False confidence is worse than a cautious prompt.
+
+## OpenClaw Health API Boundary
+
+OpenClaw talks to a narrow health namespace at `/api/openclaw/health/*`. These routes are separate from provider integration routes because they are assistant-facing, stable, and safe by default.
+
+- Auth: `Authorization: Bearer $OPENCLAW_HEALTH_TOKEN`.
+- Reads: `GET /daily-summary` and `GET /today-plan` return concise body mode, next action, missing signals, and safety metadata.
+- Writes: `POST /meals` and `POST /weight` accept bounded ingestion events only. They normalize input and return the accepted object; persistence can be attached later without changing the response contract.
+- Safety: OpenClaw responses do not include raw Oura, HealthKit, Apple Watch, or smart-scale payloads. They do not include secrets. They explicitly set `medicalDiagnosis: false`.
+
+Current web backend reads use the sample normalized ledger until persistence is wired. The response includes `dataState: "sample_until_persistence"` so OpenClaw can avoid overclaiming freshness.

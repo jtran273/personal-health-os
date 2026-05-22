@@ -51,7 +51,40 @@ Copy `.env.example` to `.env.local` and fill values locally.
 
 ```bash
 OURA_PAT=
+OPENCLAW_HEALTH_TOKEN=
 OPENCLAW_INGESTION_TOKEN=
 ```
 
 Do not commit real tokens.
+
+## OpenClaw Health API
+
+OpenClaw-safe health endpoints live under `/api/openclaw/health` and require:
+
+```bash
+Authorization: Bearer $OPENCLAW_HEALTH_TOKEN
+```
+
+They return concise, assistant-friendly JSON with safety metadata: no raw provider payloads, no secrets, ingestion-only writes, and `medicalDiagnosis: false`.
+
+Examples:
+
+```bash
+curl -H "Authorization: Bearer $OPENCLAW_HEALTH_TOKEN" \
+  http://localhost:3000/api/openclaw/health/daily-summary
+
+curl -H "Authorization: Bearer $OPENCLAW_HEALTH_TOKEN" \
+  http://localhost:3000/api/openclaw/health/today-plan
+
+curl -X POST http://localhost:3000/api/openclaw/health/meals \
+  -H "Authorization: Bearer $OPENCLAW_HEALTH_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"text":"chicken bowl","estimatedCalories":650,"estimatedProteinGrams":42}'
+
+curl -X POST http://localhost:3000/api/openclaw/health/weight \
+  -H "Authorization: Bearer $OPENCLAW_HEALTH_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"weightKg":82.4}'
+```
+
+Missing `OPENCLAW_HEALTH_TOKEN` returns `503` with a configuration error. Missing or invalid bearer auth returns `401`. Tokens are never logged or returned.
