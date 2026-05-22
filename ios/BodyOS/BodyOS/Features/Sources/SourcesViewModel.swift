@@ -19,6 +19,7 @@ final class SourcesViewModel {
     var healthKitMessage: String?
     var recentEntries: [DailyLedgerEntry] = []
 
+    private var sawAppleWatchMetricThisSession = false
     private let healthKitService: any HealthKitAuthorizing
     private let healthKitIngestor: (any RecentHealthIngesting)?
     private let store: (any LedgerStore)?
@@ -36,8 +37,9 @@ final class SourcesViewModel {
     }
 
     var weeklyCoverage: Int {
-        guard healthKitStatus == .connected, !recentEntries.isEmpty else { return 0 }
-        let average = recentEntries.reduce(0.0) { $0 + $1.coverageScore } / Double(recentEntries.count)
+        let healthKitEntries = recentHealthKitEntries
+        guard healthKitStatus == .connected, !healthKitEntries.isEmpty else { return 0 }
+        let average = healthKitEntries.reduce(0.0) { $0 + $1.coverageScore } / Double(healthKitEntries.count)
         return Int((average * 100).rounded())
     }
 
@@ -106,7 +108,7 @@ final class SourcesViewModel {
             .dormant
         }
 
-        let appleWatchStatus: AppleHealthPilotRow.Status = healthKitStatus == .connected ? .live : .waiting
+        let appleWatchStatus: AppleHealthPilotRow.Status = hasRecentAppleWatchData ? .live : .waiting
 
         return [
             AppleHealthPilotRow(
@@ -145,7 +147,11 @@ final class SourcesViewModel {
             UserDefaults.standard.set(true, forKey: "source.healthKit")
             healthKitMessage = "Syncing recent data"
             let entry = try await healthKitIngestor?.ingestRecent(days: 7)
-            if entry == nil {
+            if let entry {
+                recentEntries = [entry]
+                sawAppleWatchMetricThisSession = entry.hasAppleWatchMetric
+            }
+            if entry?.hasHealthKitBackedMetric != true {
                 healthKitStatus = .connectedNoData
                 healthKitMessage = "Permission set; no recent Apple Health samples"
             } else {
@@ -168,7 +174,19 @@ final class SourcesViewModel {
             healthKitStatus = .available
             return
         }
-        healthKitStatus = recentEntries.isEmpty ? .connectedNoData : .connected
+        healthKitStatus = hasRecentHealthKitData ? .connected : .connectedNoData
+    }
+
+    private var recentHealthKitEntries: [DailyLedgerEntry] {
+        recentEntries.filter { $0.hasHealthKitBackedMetric }
+    }
+
+    private var hasRecentHealthKitData: Bool {
+        recentEntries.contains { $0.hasHealthKitBackedMetric }
+    }
+
+    private var hasRecentAppleWatchData: Bool {
+        sawAppleWatchMetricThisSession || recentEntries.contains { $0.hasAppleWatchMetric }
     }
 
     private var sourceCards: [BodySource] {
@@ -271,4 +289,24 @@ enum SourceConnectionStatus: String, Equatable {
     case pending
     case available
     case disabled
+}
+
+private extension DailyLedgerEntry {
+    var hasHealthKitBackedMetric: Bool {
+        hasAppleWatchMetric ||
+        steps?.source == .iphone ||
+        activeCalories?.source == .iphone ||
+        weight?.source == .iphone ||
+        weight?.source == .smartScale
+    }
+
+    var hasAppleWatchMetric: Bool {
+        sleep?.totalSleepMinutes?.source == .appleWatch ||
+        sleep?.hrv?.source == .appleWatch ||
+        sleep?.restingHR?.source == .appleWatch ||
+        sleep?.readinessScore?.source == .appleWatch ||
+        sleep?.skinTempDelta?.source == .appleWatch ||
+        steps?.source == .appleWatch ||
+        activeCalories?.source == .appleWatch
+    }
 }
