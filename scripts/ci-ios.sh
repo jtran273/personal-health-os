@@ -37,7 +37,8 @@ fi
 DESTINATION="${IOS_DESTINATION:-}"
 if [[ -z "$DESTINATION" ]] && command -v xcrun >/dev/null 2>&1; then
   DESTINATION=$(xcrun simctl list devices available 2>/dev/null \
-    | awk -F '[()]' '/iPhone/ { gsub(/^[[:space:]]+|[[:space:]]+$/, "", $1); print "platform=iOS Simulator,name=" $1; exit }')
+    | awk -F '[()]' '/iPhone/ { gsub(/^[[:space:]]+|[[:space:]]+$/, "", $1); print "platform=iOS Simulator,name=" $1; exit }' \
+    || true)
 fi
 
 if [[ -z "$DESTINATION" ]]; then
