@@ -10,6 +10,7 @@ The app should do the bookkeeping; OpenClaw should ask for only the missing sign
 | `POST /api/health/meals` | Accept meal text and future photo references from OpenClaw. | Builds a meal log, no persistence yet. |
 | `GET /api/health/meals` | Return meals for the day. | Empty placeholder. |
 | `GET /api/health/daily-ledger` | Return body mode, normalized metrics, and missing work. | Sample ledger. |
+| `POST /api/openclaw/health/bodyos-ledger` | Accept BodyOS iOS assistant-safe Apple Health ledger summaries. | Validates local/dev handoff, no raw HealthKit samples. |
 
 ## Desired Loop
 
@@ -20,11 +21,12 @@ The app should do the bookkeeping; OpenClaw should ask for only the missing sign
 
 ## Ingestion Rules
 
-- Require `OPENCLAW_INGESTION_TOKEN` before accepting writes.
+- Require explicit bearer auth before accepting writes (`OPENCLAW_HEALTH_TOKEN` for `/api/openclaw/health/*`; legacy ingestion routes may use `OPENCLAW_INGESTION_TOKEN`).
 - Store raw OpenClaw payloads unchanged before normalization.
 - Preserve source, observed time, received time, and original text/photo URL.
 - Mark text/manual calories as `medium` confidence and photo estimates as `low` until corrected.
 - Never overwrite same-day manual weight with a lower-confidence source.
+- BodyOS HealthKit bridge payloads must include source attribution, confidence, freshness, missing signals, and `safety.*Included=false`; never include raw HealthKit samples or tokens.
 
 ## Future Endpoints
 
