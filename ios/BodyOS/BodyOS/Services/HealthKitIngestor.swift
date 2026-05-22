@@ -44,23 +44,22 @@ public final class HealthKitIngestor {
         async let activeEnergy = healthKit.fetchActiveEnergy(for: date)
         async let weight = healthKit.fetchWeight(for: date)
 
-        let (sleep, stepCount, activeCalories, weightEntry) = try await (sleepRecovery, steps, activeEnergy, weight)
+        let (sleep, stepSample, activeCalorieSample, weightEntry) = try await (sleepRecovery, steps, activeEnergy, weight)
 
-        if sleep == nil && stepCount == nil && activeCalories == nil && weightEntry == nil {
+        if sleep == nil && stepSample == nil && activeCalorieSample == nil && weightEntry == nil {
             return nil
         }
 
-        let now = Date()
         var entry = await store.entry(for: date) ?? DailyLedgerEntry(date: date)
 
         if let sleep {
             entry.sleep = sleep
         }
-        if let stepCount {
-            entry.steps = MetricSample(value: stepCount, source: .appleWatch, confidence: 0.75, capturedAt: now)
+        if let stepSample {
+            entry.steps = stepSample
         }
-        if let activeCalories {
-            entry.activeCalories = MetricSample(value: activeCalories, source: .appleWatch, confidence: 0.45, capturedAt: now)
+        if let activeCalorieSample {
+            entry.activeCalories = activeCalorieSample
         }
         if let weightEntry, shouldReplaceWeight(existing: entry.weight, candidate: weightEntry) {
             entry.weight = weightEntry

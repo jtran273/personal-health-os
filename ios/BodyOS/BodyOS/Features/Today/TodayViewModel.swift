@@ -100,16 +100,21 @@ final class TodayViewModel {
         }
 
         var loops: [TodayOpenLoop] = []
+        if !UserDefaults.standard.bool(forKey: "source.healthKit") {
+            loops.append(TodayOpenLoop(id: "health", label: "Apple Health not connected", since: "needs permission", cta: "Connect"))
+        } else if entry.sleep == nil && entry.steps == nil && entry.activeCalories == nil {
+            loops.append(TodayOpenLoop(id: "health-sync", label: "Apple Watch data not readable", since: "last sync", cta: "Refresh"))
+        }
         if entry.weight == nil {
             loops.append(TodayOpenLoop(id: "weight", label: "Weight not logged", since: "today", cta: "Log now"))
         }
         if entry.meals.isEmpty {
             loops.append(TodayOpenLoop(id: "food", label: "Meals not logged", since: "today", cta: "Add meal"))
         }
-        if entry.sleep?.hrv == nil {
+        if entry.sleep != nil && entry.sleep?.hrv == nil {
             loops.append(TodayOpenLoop(id: "hrv", label: "HRV missing", since: "last Apple Health sync", cta: "Refresh"))
         }
-        return loops
+        return Array(loops.prefix(3))
     }
 
     var timelineEvents: [TodayTimelineEvent] {

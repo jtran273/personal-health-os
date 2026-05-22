@@ -41,7 +41,7 @@ App/           @main, root tab view, AppDependencies.
 |---|---|
 | `LedgerStore` protocol | Lets features read/write ledger rows without knowing whether storage is SwiftData or in-memory. |
 | `HealthDataRouter` | Single place that knows the per-metric source hierarchy. Change it once, the whole app updates. |
-| `HealthKitReading` | Domain-level Apple Health reader seam so ingestion tests do not require a real HealthKit database. |
+| `HealthKitReading` | Domain-level Apple Health reader seam so ingestion tests do not require a real HealthKit database; movement and weight values preserve source/confidence before ledger merge. |
 | `LedgerCoverage` | Single scorer for daily coverage so ingestors and manual-entry flows use one denominator. |
 | `MetricSource` enum | Every value in the system is attributable. Easy to display "via Oura" badges, easy to debug data quality. |
 | `AppDependencies` via environment | Views never new-up services themselves. Easy to mock in previews. |
@@ -59,7 +59,7 @@ App/           @main, root tab view, AppDependencies.
 
 ## Open architecture questions
 
-- How to attribute Apple Health samples once source/device metadata is inspected: Apple Watch, iPhone, smart scale, or generic Apple Health.
+- Exact Apple Health source names still need physical iPhone validation across Apple Watch, iPhone, Oura-bridged samples, and a future smart scale. The classifier is implemented as a best-effort service-layer mapping.
 - How to model the Known Foods library as it grows — local-only, or sync via iCloud?
 
 See [`decisions.md`](./decisions.md) for what's been settled.

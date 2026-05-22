@@ -17,10 +17,10 @@ What's working right now:
 - Today presentation now ingests Apple Health when enabled and derives open loops / metrics / timeline from `DailyLedgerEntry`.
 - Body Ledger is now the root **Body** tab. It uses a 7-day picker, coverage ring, grouped `LedgerRow`s, and source/confidence stories derived from `DailyLedgerEntry`. It also has a reachable manual weight entry sheet that writes today's weight into the ledger with source `.manual` and high confidence.
 - Copilot tab is still mostly a static OpenClaw chat shell, but it now has a live manual meal fallback. User-entered calories/protein write to today's ledger with `.manual` source and recompute estimated deficit when active calories are available.
-- Weekly Review UI is built and ingests recent Apple Health source data on load. Real calibration still needs at least two weight rows and meal/deficit data.
+- Weekly Review UI is built and ingests recent Apple Health source data on load. It now has a 28-day weight trend/calibration foundation, but real calibration still needs repeated weight rows and meal/deficit data.
 - Sources tab is built. It shows coverage, routing, source cards, has an Apple Health connect action, and shows Oura as disabled for now.
-- `HealthKitService` now requests authorization and reads sleep duration, HRV, resting HR, steps, active energy, and body mass. `HealthKitIngestor` writes those into the ledger when `source.healthKit` is enabled.
-- `BodyOSTests` exists and covers body mode, deficit estimator, source routing, confidence bands, SwiftData ledger persistence, manual meal writes/text parsing, HealthKit ledger ingestion through a mock reader, HealthKit/manual weight precedence, Body Ledger coverage copy, manual weight coverage recomputation, and centralized ledger coverage scoring.
+- `HealthKitService` now requests authorization and reads sleep duration, HRV, resting HR, source-attributed steps, source-attributed active energy, and source-attributed body mass. `HealthKitIngestor` writes those into the ledger when `source.healthKit` is enabled.
+- `BodyOSTests` exists and covers body mode, deficit estimator, source routing, confidence bands, SwiftData ledger persistence, manual meal writes/text parsing, HealthKit ledger ingestion through a mock reader, HealthKit source attribution, HealthKit/manual/smart-scale weight precedence, Body Ledger coverage copy, manual weight coverage recomputation, weight trend/calibration edge cases, and centralized ledger coverage scoring.
 - Root tab launch supports `--initial-tab body|meals|weekly|sources` for simulator verification. Normal launch still starts on Today.
 - `BodyOS.xcodeproj` generated via `xcodegen` from `project.yml`.
 
@@ -29,6 +29,9 @@ Recent cleanup:
 - Copilot composer can directly log text like `chicken bowl 650 kcal 42g protein`; missing calories opens the manual sheet prefilled.
 - HealthKit weight no longer overwrites a same-day manual weight entry.
 - Body coverage copy names missing HRV/resting HR so it matches the coverage denominator.
+- HealthKit movement samples now preserve source/confidence through ingestion, so steps and active energy can remain `.appleWatch` or `.iphone`.
+- HealthKit weight reads classify source metadata as smart scale, Oura bridge, iPhone, or manual where possible. Smart-scale-ready weight entries include high confidence and optional body-fat percentage.
+- Today missing-data prompts are capped and source-specific: permission missing, Apple Watch samples unreadable, weight missing, meals missing, or HRV missing only after sleep data exists.
 
 What's empty / stubbed:
 - `MealLogService.estimateMacros` — needs Claude API call.
@@ -36,6 +39,7 @@ What's empty / stubbed:
 - Copilot chat messages are static; meal photo flow and AI macro estimation are not wired.
 - The old Weight screen still exists in `Features/Weight/` but is no longer on the root tab. Its view model is ledger-backed and reused by Body Ledger's sheet.
 - HealthKit compiles, device build succeeds, and real Apple Watch data has been verified on James's iPhone.
+- Physical iPhone follow-up is still required for the new source-attribution classifier: verify actual Apple Health source names for Apple Watch movement, phone movement, Oura-bridged samples if present, and smart-scale weight after James chooses/connects a scale.
 
 ## Required reading, in order
 
@@ -116,6 +120,8 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
 ```
 
 Latest run: `2026-05-21 17:39`, **26 tests passed**, result bundle at `build/Logs/Test/Test-BodyOS-2026.05.21_17-39-10--0700.xcresult`.
+
+Current worker note: in the `health-sources-weight` worktree, `/Applications/Xcode.app/Contents/Developer` is missing and `xcodegen` is not installed, so `xcodebuild test` and the documented typecheck command could not run here. A syntax-only `swiftc -parse $(find BodyOS -name "*.swift")` check passed after the source-attribution and weight-trend changes. Because project generation was unavailable, the generated `BodyOS.xcodeproj` was updated manually to include the new Swift files.
 
 ### Regenerate the Xcode project (after adding new files)
 
