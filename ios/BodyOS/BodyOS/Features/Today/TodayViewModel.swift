@@ -10,11 +10,11 @@ final class TodayViewModel {
     var lastSyncedAt: Date?
 
     private let store: any LedgerStore
-    private let healthKitIngestor: HealthKitIngestor?
+    private let healthKitIngestor: (any RecentHealthIngesting)?
 
     init(
         store: any LedgerStore,
-        healthKitIngestor: HealthKitIngestor? = nil
+        healthKitIngestor: (any RecentHealthIngesting)? = nil
     ) {
         self.store = store
         self.healthKitIngestor = healthKitIngestor
@@ -30,15 +30,10 @@ final class TodayViewModel {
                 lastSyncError = error.localizedDescription
             }
         }
-        // Prefer today; fall back to the most recent populated day so morning gaps don't
-        // leave the screen empty before today's sync arrives.
-        let todayEntry = await store.entry(for: Date())
-        if let todayEntry {
-            self.entry = todayEntry
-        } else {
-            let recent = await store.recentEntries(days: 7)
-            self.entry = recent.first
-        }
+        // P0 data integrity: Today must represent today's Apple Health ledger only.
+        // Older populated days remain available for trends, but they should never masquerade
+        // as current steps/recovery when today's HealthKit sync has not produced samples yet.
+        self.entry = await store.entry(for: Date())
         self.recentEntries = await store.recentEntries(days: 7)
         if let entry = self.entry {
             self.recommendedAction = oneAction(for: entry).title
@@ -52,6 +47,9 @@ final class TodayViewModel {
     }
 
     var modeHeadline: String {
+        guard entry != nil else {
+            return "Waiting for Health data."
+        }
         switch activeMode {
         case .green: return "Push it."
         case .yellow: return "Recover, don't push."
@@ -84,6 +82,14 @@ final class TodayViewModel {
 
     var oneAction: TodayOneAction {
         guard let entry else {
+            if UserDefaults.standard.bool(forKey: "source.healthKit") {
+                return TodayOneAction(
+                    title: "Refresh Apple Health.",
+                    reason: "Permission is set, but today's ledger has no readable Apple Watch or iPhone samples yet.",
+                    window: "now",
+                    systemImage: "arrow.clockwise"
+                )
+            }
             return TodayOneAction(
                 title: "Connect Apple Health.",
                 reason: "The Today screen needs Apple Watch sleep, recovery, and movement signals before it can choose a useful action.",
@@ -96,6 +102,9 @@ final class TodayViewModel {
 
     var openLoops: [TodayOpenLoop] {
         guard let entry else {
+            if UserDefaults.standard.bool(forKey: "source.healthKit") {
+                return [TodayOpenLoop(id: "health-sync", label: "Apple Watch data not readable", since: "today", cta: "Refresh")]
+            }
             return [TodayOpenLoop(id: "health", label: "Apple Health not connected", since: "needs permission", cta: "Connect")]
         }
 
@@ -176,6 +185,12 @@ final class TodayViewModel {
         let coverage = Int(((entry?.coverageScore ?? 0) * 100).rounded())
         if let lastSyncError {
             return "Sync failed. Coverage today \(coverage)%. \(lastSyncError)"
+        }
+        if entry == nil {
+            if UserDefaults.standard.bool(forKey: "source.healthKit") {
+                return "No live Apple Health samples in today's ledger yet. Pull to refresh after Apple Watch syncs."
+            }
+            return "Apple Health is not connected. No placeholder metrics are shown."
         }
         guard let lastSyncedAt else {
             return "Sync pending. Coverage today \(coverage)%."

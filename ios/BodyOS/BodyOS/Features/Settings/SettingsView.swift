@@ -79,6 +79,8 @@ struct SettingsView: View {
             return "Requesting permission"
         case .connected:
             return "Connected through Apple Health."
+        case .connectedNoData:
+            return "Permission set; no readable Apple Health samples yet."
         case .failed(let message):
             return message
         }
@@ -89,7 +91,8 @@ struct SettingsView: View {
         do {
             try await dependencies.healthKitService.requestAuthorization()
             healthKitEnabled = true
-            healthKitStatus = .connected
+            let entry = try await dependencies.healthKitIngestor.ingestRecent(days: 7)
+            healthKitStatus = entry == nil ? .connectedNoData : .connected
         } catch {
             healthKitEnabled = false
             healthKitStatus = .failed(error.localizedDescription)
@@ -101,5 +104,6 @@ private enum HealthKitStatus: Equatable {
     case idle
     case requesting
     case connected
+    case connectedNoData
     case failed(String)
 }

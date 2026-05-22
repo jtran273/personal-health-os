@@ -76,6 +76,7 @@
 		F3E88AA1052EF135B4E9ECB8 /* OpenClawHealthExportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4E92621C93484D88D77AEE5 /* OpenClawHealthExportTests.swift */; };
 		F4F09B48835D7BCF020233C0 /* WeightTrendServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DFD17AF9D23C5A22CC2FE2E /* WeightTrendServiceTests.swift */; };
 		F803DF59A6461BE53B2D6A14 /* Confidence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 736F58808352A925EE59AD21 /* Confidence.swift */; };
+		F840CBD6ACCCB1872BE80B95 /* TodayViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE9552BB28A26475FBAF06EF /* TodayViewModelTests.swift */; };
 		FB0A0EAEA2D4B89A23011B83 /* KnownFood.swift in Sources */ = {isa = PBXBuildFile; fileRef = D17F881668A461DBE6854EEB /* KnownFood.swift */; };
 		FB8EACC386B5B2CF33979F64 /* LedgerCoverageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA9C3F12249885A547ED8875 /* LedgerCoverageTests.swift */; };
 		FBDAF8EEF3529E214C0697A4 /* BodyModeBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = D66B2D7F6886BD6FF1200B83 /* BodyModeBadge.swift */; };
@@ -152,6 +153,7 @@
 		BADCC2C6BC5ADF6B1F197833 /* JetBrainsMono-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "JetBrainsMono-Regular.ttf"; sourceTree = "<group>"; };
 		BB1C6D74BD3A4F9AFC8CCFD4 /* BodyLedgerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyLedgerViewModel.swift; sourceTree = "<group>"; };
 		BB30B94C16EB073CFB4973A0 /* MealLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealLogView.swift; sourceTree = "<group>"; };
+		BE9552BB28A26475FBAF06EF /* TodayViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayViewModelTests.swift; sourceTree = "<group>"; };
 		BEC8F7B254353E81B8E3949F /* TodayViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayViewModel.swift; sourceTree = "<group>"; };
 		BF089F3BF8F7CB42DA94B65E /* OuraTokenStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OuraTokenStore.swift; sourceTree = "<group>"; };
 		C1097CEB4DBC7FBBA01B1FAC /* LedgerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LedgerStore.swift; sourceTree = "<group>"; };
@@ -330,6 +332,7 @@
 				A4E92621C93484D88D77AEE5 /* OpenClawHealthExportTests.swift */,
 				CC6CA31CCE1CCDE0E5A44A18 /* SourcesViewModelTests.swift */,
 				6DCD1EF4DE001C2F3A4344F7 /* SwiftDataLedgerStoreTests.swift */,
+				BE9552BB28A26475FBAF06EF /* TodayViewModelTests.swift */,
 				8DFD17AF9D23C5A22CC2FE2E /* WeightTrendServiceTests.swift */,
 				AA7FE89C717027174FCD4875 /* WeightViewModelTests.swift */,
 			);
@@ -575,6 +578,7 @@
 				F3E88AA1052EF135B4E9ECB8 /* OpenClawHealthExportTests.swift in Sources */,
 				4A83EFBFB60DE0584672AEA7 /* SourcesViewModelTests.swift in Sources */,
 				B730D09A587AA97822765B56 /* SwiftDataLedgerStoreTests.swift in Sources */,
+				F840CBD6ACCCB1872BE80B95 /* TodayViewModelTests.swift in Sources */,
 				F4F09B48835D7BCF020233C0 /* WeightTrendServiceTests.swift in Sources */,
 				8FAC4DBADDF02E4391FF4386 /* WeightViewModelTests.swift in Sources */,
 			);

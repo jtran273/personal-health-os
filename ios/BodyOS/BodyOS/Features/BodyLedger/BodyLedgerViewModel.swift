@@ -8,12 +8,12 @@ final class BodyLedgerViewModel {
     var lastSyncError: String?
 
     private let store: any LedgerStore
-    private let healthKitIngestor: HealthKitIngestor?
+    private let healthKitIngestor: (any RecentHealthIngesting)?
     private let calendar: Calendar
 
     init(
         store: any LedgerStore,
-        healthKitIngestor: HealthKitIngestor? = nil,
+        healthKitIngestor: (any RecentHealthIngesting)? = nil,
         calendar: Calendar = .current
     ) {
         self.store = store

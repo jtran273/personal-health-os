@@ -6,13 +6,13 @@ final class WeeklyReviewViewModel {
     var recentEntries: [DailyLedgerEntry] = []
 
     private let store: any LedgerStore
-    private let healthKitIngestor: HealthKitIngestor?
+    private let healthKitIngestor: (any RecentHealthIngesting)?
     private let calendar: Calendar
     private let weightTrendService: WeightTrendService
 
     init(
         store: any LedgerStore,
-        healthKitIngestor: HealthKitIngestor? = nil,
+        healthKitIngestor: (any RecentHealthIngesting)? = nil,
         calendar: Calendar = .current,
         weightTrendService: WeightTrendService = WeightTrendService()
     ) {
