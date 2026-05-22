@@ -1,21 +1,23 @@
 # Personal Health OS
 
-James-first health and diet operating system for reducing cognitive load around body composition, meals, recovery, and day planning.
+James-first health and diet operating system for reducing cognitive load around body
+composition, meals, recovery, and day planning.
 
-OpenClaw is the daily interface. This app is the source-agnostic backend and eventual frontend shell that receives meal text/photos, weight prompts, Oura and Apple Health style wearable data, then normalizes them into a daily body ledger.
+OpenClaw is the daily interface. This repo holds the source-agnostic health model, API
+contracts, a lightweight web operator surface, and the native BodyOS iOS app.
 
-## Current Scope
+## Current Status
 
-- Next.js App Router skeleton with TypeScript.
-- Source-agnostic health domain model in `src/lib/health`.
-- Safe provider stubs for Oura, HealthKit, and OpenClaw ingestion.
-- Placeholder API routes for daily ledger reads, meal ingestion, and Oura sync.
-- Native SwiftUI iOS app under `ios/BodyOS` with verified real-device HealthKit ingestion.
-- Product and architecture docs under `docs/`.
+- Next.js App Router shell with a static Health OS control surface.
+- Source-agnostic TypeScript health domain model in `src/lib/health`.
+- Safe provider stubs for Oura, HealthKit-style data, and OpenClaw ingestion.
+- Placeholder API routes for daily ledgers, meal capture, and Oura sync.
+- Native SwiftUI iOS app under `ios/BodyOS` with real-device Apple Health ingestion.
+- Product, architecture, roadmap, hardware, and integration docs under `docs/`.
 
-No auth, payment, production persistence, or polished UI is implemented yet. The frontend is intentionally plain so a designer can replace the surface without fighting the backend foundation.
+No auth, payment, production persistence, or secret-backed production ingestion is in place yet.
 
-## Getting Started
+## Quickstart
 
 ```bash
 npm install
@@ -24,34 +26,99 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-### iOS app
-
-The native BodyOS app lives in `ios/BodyOS`.
-
-```bash
-cd ios/BodyOS
-xcodegen generate
-xcodebuild test -project BodyOS.xcodeproj -scheme BodyOS -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath build CODE_SIGNING_ALLOWED=NO
-```
-
-For real-device HealthKit testing, use the setup notes in `ios/BodyOS/README.md`.
-
-## Checks
-
-```bash
-npm run typecheck
-npm run test
-npm run lint
-npm run build
-```
-
-## Environment
-
-Copy `.env.example` to `.env.local` and fill values locally.
+Copy `.env.example` to `.env.local` only when you need provider-backed routes:
 
 ```bash
 OURA_PAT=
 OPENCLAW_INGESTION_TOKEN=
 ```
 
-Do not commit real tokens.
+Do not commit real tokens or `ios/BodyOS/BodyOS/Resources/Secrets.plist`.
+
+## Architecture Map
+
+```text
+OpenClaw / Apple Health / Oura / Smart scale / Manual entry
+  -> provider adapters in src/lib/providers or ios/BodyOS/BodyOS/Services
+  -> raw source events with provenance
+  -> normalized daily ledger
+  -> body mode, coverage, prompts, weekly recalibration
+  -> web shell, iOS UI, and future OpenClaw replies
+```
+
+Important directories:
+
+| Path | Purpose |
+| --- | --- |
+| `app/` | Next.js routes, API handlers, and web shell UI. |
+| `src/lib/health/` | Source-agnostic model, source routing, body-mode logic, calorie recalibration. |
+| `src/lib/providers/` | Provider-specific adapters and ingestion helpers. |
+| `src/test/` | Node test coverage for domain logic. |
+| `docs/` | Product, architecture, hardware, roadmap, and OpenClaw strategy. |
+| `ios/BodyOS/` | Native SwiftUI app, HealthKit ingestion, SwiftData ledger, design system, tests. |
+
+## API Routes
+
+| Route | Method | Current behavior | Next useful step |
+| --- | --- | --- | --- |
+| `/api/health/daily-ledger` | `GET` | Returns a sample normalized ledger and body-mode reasons. | Back with durable ledger storage. |
+| `/api/health/meals` | `GET` | Returns an empty meal list plus TODOs. | Read persisted meals for the requested day. |
+| `/api/health/meals` | `POST` | Builds an OpenClaw meal log from text/photo input. | Validate ingestion token and persist raw event. |
+| `/api/integrations/oura/sync` | `POST` | Fetches Oura sleep/readiness when `OURA_PAT` is set. | Keep dormant unless Oura becomes active again. |
+
+## iOS App
+
+The native BodyOS app is in `ios/BodyOS`. It is currently the most complete product surface.
+
+```bash
+cd ios/BodyOS
+xcodegen generate
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
+  -project BodyOS.xcodeproj \
+  -scheme BodyOS \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -derivedDataPath build \
+  CODE_SIGNING_ALLOWED=NO
+```
+
+For real-device Apple Watch data, use the setup and launch notes in
+[`ios/BodyOS/README.md`](./ios/BodyOS/README.md). The active bundle id is
+`com.jamestran.bodyos`.
+
+## Checks
+
+Run the root checks before opening a PR:
+
+```bash
+npm run typecheck
+npm test
+npm run lint
+npm run build
+```
+
+Run iOS checks when touching Swift, Xcode project config, HealthKit behavior, or iOS docs:
+
+```bash
+cd ios/BodyOS
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
+  -project BodyOS.xcodeproj \
+  -scheme BodyOS \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  -derivedDataPath build \
+  CODE_SIGNING_ALLOWED=NO
+```
+
+## Agent Workflow
+
+Before non-trivial work:
+
+1. Read this README, [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md), and the relevant
+   roadmap/integration doc.
+2. For iOS work, read [`ios/BodyOS/HANDOFF.md`](./ios/BodyOS/HANDOFF.md) and
+   [`ios/BodyOS/memory-bank/active-context.md`](./ios/BodyOS/memory-bank/active-context.md).
+3. Keep vendor types out of domain models and feature views.
+4. Prefer source-attributed, confidence-aware ledger rows over fake dashboard values.
+5. Update docs or memory-bank files when a durable project decision changes.
+
+The current highest-leverage build path is durable OpenClaw meal/weight ingestion, then
+weekly weight-trend recalibration once enough real rows exist.

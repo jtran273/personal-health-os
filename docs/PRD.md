@@ -10,11 +10,11 @@ Version 2 connects body, diet, budget, and calendar. The foundation starts with 
 
 - Capture meal logs from OpenClaw text and future meal photos.
 - Capture weight from prompts or a future smart scale integration.
-- Ingest wearable signals from Oura and Apple Health style sources.
+- Ingest wearable signals from Apple Watch through Apple Health, with dormant Oura support as a fallback.
 - Normalize raw events into a daily ledger with confidence per metric.
 - Classify a daily body mode: Green, Yellow, or Red.
 - Return simple JSON API responses for future OpenClaw and frontend clients.
-- Keep the frontend as a placeholder until Claude Designer provides the designed UI.
+- Keep the web frontend useful but lightweight while the native iOS app remains the primary product surface.
 
 ## Out of Scope for MVP
 
@@ -26,10 +26,11 @@ Version 2 connects body, diet, budget, and calendar. The foundation starts with 
 
 ## Hardware Strategy
 
-No single wearable is treated as truth. The app uses each device where it is strongest:
+No single wearable is treated as truth. The app uses each device where it is strongest and where
+James actually has hardware connected:
 
-- Oura: sleep, resting heart rate, HRV, recovery, temperature deviation.
-- Apple Watch or Garmin: workouts, active heart rate, steps, activity minutes.
+- Apple Watch / Apple Health: sleep, resting heart rate, HRV, steps, active energy, workouts, and Health-sourced weight when present.
+- Oura: dormant fallback for sleep, readiness, HRV, resting heart rate, and temperature deviation.
 - Smart scale or manual prompt: weight trend.
 - OpenClaw: meal context, appetite, symptoms, adherence, and subjective notes.
 
@@ -46,3 +47,10 @@ The product keeps raw source events and normalized metrics separate. Raw events 
 3. Evening: ask only for missing high-value signals.
 4. Weekly: recalibrate calorie and intake assumptions against weight trend.
 5. Later: connect diet choices to grocery budget and calendar pressure.
+
+## Current Web Shell
+
+The web homepage is a lightweight Health OS control surface for James and future agents. It is not
+the primary mobile UI yet. Its job is to make the current state obvious: today's sample body mode,
+source coverage, meal/weight capture path, OpenClaw route status, and Apple Watch / smart-scale
+readiness.

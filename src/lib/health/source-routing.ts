@@ -11,31 +11,31 @@ export interface SourceRoute {
 const routes: Record<HealthMetric, SourceRoute> = {
   sleep: {
     metric: "sleep",
-    preferredSource: "oura",
-    fallbackSources: ["apple_health", "apple_watch", "garmin", "manual"],
+    preferredSource: "apple_health",
+    fallbackSources: ["apple_watch", "oura", "garmin", "manual"],
     defaultConfidence: "high",
-    rationale: "Oura is the preferred sleep and recovery source."
+    rationale: "Apple Health is the active bridge for Apple Watch sleep data."
   },
   recovery: {
     metric: "recovery",
-    preferredSource: "oura",
-    fallbackSources: ["apple_health", "apple_watch", "garmin", "manual"],
+    preferredSource: "apple_health",
+    fallbackSources: ["apple_watch", "oura", "garmin", "manual"],
     defaultConfidence: "high",
-    rationale: "Recovery should prioritize Oura readiness, HRV, RHR, and temperature context."
+    rationale: "Recovery should prioritize the Apple Watch signals James currently wears."
   },
   hrv: {
     metric: "hrv",
-    preferredSource: "oura",
-    fallbackSources: ["apple_health", "apple_watch", "garmin"],
+    preferredSource: "apple_health",
+    fallbackSources: ["apple_watch", "oura", "garmin"],
     defaultConfidence: "high",
-    rationale: "Oura HRV has strong practical agreement for recovery trend use."
+    rationale: "Apple Health is the active bridge for Apple Watch HRV trend use."
   },
   resting_heart_rate: {
     metric: "resting_heart_rate",
-    preferredSource: "oura",
-    fallbackSources: ["apple_health", "apple_watch", "garmin"],
+    preferredSource: "apple_health",
+    fallbackSources: ["apple_watch", "oura", "garmin"],
     defaultConfidence: "high",
-    rationale: "Oura resting heart rate agreement is strong enough to use as default."
+    rationale: "Apple Health is the active bridge for Apple Watch resting heart rate."
   },
   temperature_deviation: {
     metric: "temperature_deviation",

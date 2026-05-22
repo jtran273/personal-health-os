@@ -5,7 +5,7 @@
 Personal Health OS uses a source-agnostic body ledger. Provider integrations produce raw events. Normalization turns those events into daily metrics. Product logic consumes normalized ledgers, not provider-specific payloads.
 
 ```text
-Oura / HealthKit / OpenClaw / Scale
+Apple Health / OpenClaw / Oura / Scale
   -> RawHealthEvent[]
   -> NormalizedDailyLedger
   -> Body mode, meal prompts, trend summaries, future budget/calendar links
@@ -42,8 +42,8 @@ Every normalized metric carries confidence:
 
 Routing defaults:
 
-- Sleep and recovery: Oura.
-- Workouts and steps: Apple Watch, Garmin, or HealthKit bridge.
+- Sleep and recovery: Apple Watch through Apple Health; dormant Oura fallback if James uses Oura again.
+- Workouts and steps: Apple Watch or HealthKit bridge.
 - Weight: smart scale first, then OpenClaw/manual prompt.
 - Meals: OpenClaw text/photo ingestion.
 - Calories burned: low-confidence prior only.
@@ -67,3 +67,13 @@ The body mode classifier combines readiness, sleep, temperature deviation, stres
 - Red: recovery debt or illness/stress signal; bias toward rest, simple food, and fewer commitments.
 
 The classifier is intentionally conservative. False confidence is worse than a cautious prompt.
+
+## Web and iOS Surfaces
+
+The root web app is an operator shell for humans and agents. It should show body mode, coverage,
+capture affordances, and route status without pretending persistence is finished.
+
+The iOS app under `ios/BodyOS` is the active product surface. It already owns real-device Apple
+Health ingestion, SwiftData ledger persistence, and the native Today/Copilot/Body/Weekly/Sources
+experience. Keep shared concepts aligned across both surfaces: source, confidence, coverage, and
+body mode.

@@ -2,10 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { chooseBestSource } from "@/lib/health/source-routing";
 
-test("chooses Oura for recovery when available", () => {
-  const route = chooseBestSource("recovery", ["apple_watch", "oura"]);
+test("chooses Apple Health for recovery when available", () => {
+  const route = chooseBestSource("recovery", ["apple_health", "oura"]);
 
-  assert.equal(route.selectedSource, "oura");
+  assert.equal(route.selectedSource, "apple_health");
   assert.equal(route.confidence, "high");
 });
 
