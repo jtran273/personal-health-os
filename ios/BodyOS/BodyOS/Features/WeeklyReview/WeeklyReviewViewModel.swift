@@ -8,51 +8,56 @@ final class WeeklyReviewViewModel {
     private let store: any LedgerStore
     private let healthKitIngestor: HealthKitIngestor?
     private let calendar: Calendar
+    private let weightTrendService: WeightTrendService
 
     init(
         store: any LedgerStore,
         healthKitIngestor: HealthKitIngestor? = nil,
-        calendar: Calendar = .current
+        calendar: Calendar = .current,
+        weightTrendService: WeightTrendService = WeightTrendService()
     ) {
         self.store = store
         self.healthKitIngestor = healthKitIngestor
         self.calendar = calendar
+        self.weightTrendService = weightTrendService
     }
 
     func load() async {
         if UserDefaults.standard.bool(forKey: "source.healthKit"), let healthKitIngestor {
-            _ = try? await healthKitIngestor.ingestRecent(days: 7)
+            _ = try? await healthKitIngestor.ingestRecent(days: 28)
         }
-        let entries = await store.recentEntries(days: 7)
+        let entries = await store.recentEntries(days: 28)
         self.recentEntries = entries
     }
 
     var avgSleepHours: Double? {
-        let mins = recentEntries.compactMap { $0.sleep?.totalSleepMinutes?.value }
+        let mins = weekEntries.compactMap { $0.sleep?.totalSleepMinutes?.value }
         guard !mins.isEmpty else { return nil }
         let avg = Double(mins.reduce(0, +)) / Double(mins.count)
         return avg / 60.0
     }
 
     var totalActiveCalories: Int {
-        recentEntries.compactMap { $0.activeCalories?.value }.reduce(0, +)
+        weekEntries.compactMap { $0.activeCalories?.value }.reduce(0, +)
     }
 
     var avgDeficit: Int? {
-        let defs = recentEntries.compactMap { $0.estimatedDeficit }
+        let defs = weekEntries.compactMap { $0.estimatedDeficit }
         guard !defs.isEmpty else { return nil }
         return defs.reduce(0, +) / defs.count
     }
 
     /// Returns (firstKg, lastKg) over the window if at least two weights exist.
     var weightTrend: (Double, Double)? {
-        let sorted = recentEntries
-            .compactMap { $0.weight }
-            .sorted { $0.date < $1.date }
-        guard let first = sorted.first, let last = sorted.last, first.id != last.id else {
+        let summary = weightTrendService.trend(entries: recentEntries, windowDays: 7)
+        guard let first = summary.startWeightKg, let last = summary.endWeightKg, summary.status == .ready else {
             return nil
         }
-        return (first.weightKg, last.weightKg)
+        return (first, last)
+    }
+
+    var weightTrendSummaries: [WeightTrendSummary] {
+        weightTrendService.trends(entries: recentEntries)
     }
 
     var weekKicker: String {
@@ -112,12 +117,11 @@ final class WeeklyReviewViewModel {
     }
 
     var calibrationInsight: String {
-        guard let weightDeltaLb, let avgDeficit else {
+        let calibration = weightTrendService.calibration(entries: recentEntries, windowDays: 14)
+        guard let observedDeficit = calibration.observedDeficitKcalPerDay, let avgDeficit = calibration.avgEstimatedDeficit else {
             return "I need at least two weigh-ins and enough logged meals to compare calorie math against the scale."
         }
 
-        let days = max(1, weightObservationSpanDays)
-        let observedDeficit = Int(((-weightDeltaLb * 3500.0) / Double(days)).rounded())
         let observedText = observedDeficit > 0 ? "\(observedDeficit) kcal/day" : "no clear deficit"
         let gap = abs(avgDeficit - observedDeficit)
 
@@ -237,7 +241,7 @@ final class WeeklyReviewViewModel {
     }
 
     private var canRecalibrate: Bool {
-        weightDeltaLb != nil && avgDeficit != nil
+        weightTrendService.calibration(entries: recentEntries, windowDays: 14).correctionKcalPerDay != nil
     }
 
     private var weekEntries: [DailyLedgerEntry] {
@@ -249,14 +253,6 @@ final class WeeklyReviewViewModel {
         return (0..<7).compactMap { offset in
             calendar.date(byAdding: .day, value: -(6 - offset), to: today)
         }
-    }
-
-    private var weightObservationSpanDays: Int {
-        let weights = recentEntries
-            .compactMap { $0.weight }
-            .sorted { $0.date < $1.date }
-        guard let first = weights.first, let last = weights.last else { return 1 }
-        return max(1, calendar.dateComponents([.day], from: first.date, to: last.date).day ?? 1)
     }
 
     private func entry(on date: Date) -> DailyLedgerEntry? {

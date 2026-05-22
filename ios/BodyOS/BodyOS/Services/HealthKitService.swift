@@ -11,8 +11,8 @@ public enum HealthKitServiceError: Error {
 /// Domain-level reads BodyOS needs from Apple Health.
 public protocol HealthKitReading {
     func fetchSleepRecovery(for date: Date) async throws -> SleepRecovery?
-    func fetchSteps(for date: Date) async throws -> Int?
-    func fetchActiveEnergy(for date: Date) async throws -> Int?
+    func fetchSteps(for date: Date) async throws -> MetricSample<Int>?
+    func fetchActiveEnergy(for date: Date) async throws -> MetricSample<Int>?
     func fetchWeight(for date: Date) async throws -> WeightEntry?
 }
 
@@ -44,20 +44,24 @@ public final class HealthKitService: HealthKitReading {
         }
     }
 
-    public func fetchSteps(for date: Date) async throws -> Int? {
+    public func fetchSteps(for date: Date) async throws -> MetricSample<Int>? {
         guard let type = HKQuantityType.quantityType(forIdentifier: .stepCount) else {
             throw HealthKitServiceError.missingType(.stepCount)
         }
-        let quantity = try await fetchSum(type: type, unit: .count(), for: date)
-        return quantity.map { Int($0.rounded()) }
+        let quantity = try await fetchAttributedSum(type: type, unit: .count(), for: date, metric: .movement)
+        return quantity.map {
+            MetricSample(value: Int($0.value.rounded()), source: $0.source, confidence: $0.confidence, capturedAt: Date())
+        }
     }
 
-    public func fetchActiveEnergy(for date: Date) async throws -> Int? {
+    public func fetchActiveEnergy(for date: Date) async throws -> MetricSample<Int>? {
         guard let type = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned) else {
             throw HealthKitServiceError.missingType(.activeEnergyBurned)
         }
-        let quantity = try await fetchSum(type: type, unit: .kilocalorie(), for: date)
-        return quantity.map { Int($0.rounded()) }
+        let quantity = try await fetchAttributedSum(type: type, unit: .kilocalorie(), for: date, metric: .activeEnergy)
+        return quantity.map {
+            MetricSample(value: Int($0.value.rounded()), source: $0.source, confidence: $0.confidence, capturedAt: Date())
+        }
     }
 
     public func fetchSleepRecovery(for date: Date) async throws -> SleepRecovery? {
@@ -138,11 +142,19 @@ public final class HealthKitService: HealthKitReading {
                     continuation.resume(throwing: HealthKitServiceError.unexpectedSample)
                     return
                 }
+                let source = Self.metricSource(
+                    sourceName: quantitySample.sourceRevision.source.name,
+                    bundleIdentifier: quantitySample.sourceRevision.source.bundleIdentifier,
+                    deviceName: quantitySample.device?.name,
+                    deviceModel: quantitySample.device?.model,
+                    manufacturer: quantitySample.device?.manufacturer,
+                    metric: .weight
+                )
                 continuation.resume(returning: WeightEntry(
                     date: quantitySample.startDate,
                     weightKg: quantitySample.quantity.doubleValue(for: .gramUnit(with: .kilo)),
-                    source: .iphone,
-                    confidence: 0.8
+                    source: source,
+                    confidence: Self.confidence(for: source, metric: .weight)
                 ))
             }
             healthStore.execute(query)
@@ -220,7 +232,12 @@ public final class HealthKitService: HealthKitReading {
         }
     }
 
-    private func fetchSum(type: HKQuantityType, unit: HKUnit, for date: Date) async throws -> Double? {
+    private func fetchAttributedSum(
+        type: HKQuantityType,
+        unit: HKUnit,
+        for date: Date,
+        metric: HealthKitMetricKind
+    ) async throws -> AttributedQuantity? {
         let start = calendar.startOfDay(for: date)
         guard let end = calendar.date(byAdding: .day, value: 1, to: start) else { return nil }
         let predicate = HKQuery.predicateForSamples(
@@ -229,20 +246,104 @@ public final class HealthKitService: HealthKitReading {
             options: [.strictStartDate, .strictEndDate]
         )
 
-        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Double?, Error>) in
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<AttributedQuantity?, Error>) in
             let query = HKStatisticsQuery(
                 quantityType: type,
                 quantitySamplePredicate: predicate,
-                options: .cumulativeSum
+                options: [.cumulativeSum, .separateBySource]
             ) { _, statistics, error in
                 if let error {
                     continuation.resume(throwing: error)
                     return
                 }
-                let value = statistics?.sumQuantity()?.doubleValue(for: unit)
-                continuation.resume(returning: value)
+                guard let value = statistics?.sumQuantity()?.doubleValue(for: unit), value > 0 else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                let dominantSource = statistics?.sources()?
+                    .compactMap { source -> (HKSource, Double)? in
+                        guard let quantity = statistics?.sumQuantity(for: source) else { return nil }
+                        return (source, quantity.doubleValue(for: unit))
+                    }
+                    .max { $0.1 < $1.1 }?
+                    .0
+                let source = Self.metricSource(
+                    sourceName: dominantSource?.name,
+                    bundleIdentifier: dominantSource?.bundleIdentifier,
+                    deviceName: nil,
+                    deviceModel: nil,
+                    manufacturer: nil,
+                    metric: metric
+                )
+                continuation.resume(returning: AttributedQuantity(
+                    value: value,
+                    source: source,
+                    confidence: Self.confidence(for: source, metric: metric)
+                ))
             }
             healthStore.execute(query)
+        }
+    }
+
+    static func metricSource(
+        sourceName: String?,
+        bundleIdentifier: String?,
+        deviceName: String?,
+        deviceModel: String?,
+        manufacturer: String?,
+        metric: HealthKitMetricKind
+    ) -> MetricSource {
+        let haystack = [sourceName, bundleIdentifier, deviceName, deviceModel, manufacturer]
+            .compactMap { $0?.lowercased() }
+            .joined(separator: " ")
+
+        if haystack.contains("watch") {
+            return .appleWatch
+        }
+        if haystack.contains("oura") {
+            return .oura
+        }
+        if metric == .weight && (
+            haystack.contains("scale") ||
+            haystack.contains("withings") ||
+            haystack.contains("renpho") ||
+            haystack.contains("eufy") ||
+            haystack.contains("fitbit")
+        ) {
+            return .smartScale
+        }
+        if haystack.contains("iphone") || haystack.contains("health") || bundleIdentifier?.hasPrefix("com.apple") == true {
+            return .iphone
+        }
+
+        switch metric {
+        case .movement, .activeEnergy, .recovery:
+            return .iphone
+        case .weight:
+            return .manual
+        }
+    }
+
+    private static func confidence(for source: MetricSource, metric: HealthKitMetricKind) -> Double {
+        switch (metric, source) {
+        case (.weight, .smartScale):
+            return 0.98
+        case (.weight, .manual):
+            return 0.92
+        case (.weight, .iphone):
+            return 0.8
+        case (.movement, .appleWatch):
+            return 0.75
+        case (.movement, .iphone):
+            return 0.55
+        case (.activeEnergy, .appleWatch):
+            return 0.45
+        case (.activeEnergy, .iphone):
+            return 0.35
+        case (.recovery, .appleWatch):
+            return 0.75
+        default:
+            return 0.65
         }
     }
 
@@ -271,4 +372,17 @@ private extension Array where Element: Hashable {
     func asSet() -> Set<Element> {
         Set(self)
     }
+}
+
+struct AttributedQuantity {
+    let value: Double
+    let source: MetricSource
+    let confidence: Double
+}
+
+enum HealthKitMetricKind {
+    case movement
+    case activeEnergy
+    case recovery
+    case weight
 }

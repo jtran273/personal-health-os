@@ -13,6 +13,12 @@ Format:
 
 ---
 
+## 018 — HealthKit movement and scale reads preserve source class before ingestion (2026-05-21)
+**Context:** Apple Health can contain Apple Watch, iPhone, Oura-bridged, manual, and future smart-scale samples. The earlier HealthKit reader returned bare movement integers and labeled HealthKit weight as iPhone.
+**Decision:** Return source-attributed `MetricSample<Int>` values for HealthKit steps and active energy, classify HealthKit sample metadata into `MetricSource` where possible, and add a pure `WeightTrendService` for 7/14/28-day trend and calorie-calibration math.
+**Why:** Source provenance must survive the service boundary so Today, Body, and Weekly can explain whether a value came from Watch, phone, Oura bridge, manual entry, or scale. Weight trend/calibration should be testable without HealthKit or UI.
+**Consequences:** HealthKit source classification is best-effort and still needs physical iPhone validation against real Apple Health source names. Smart-scale readiness exists at the model/service/test layer, but no vendor-specific scale API is connected yet.
+
 ## 017 — Real-device HealthKit verification uses James's bundle id (2026-05-21)
 **Context:** Simulator tests could verify ledger logic, but Apple Watch data requires James's physical iPhone and Apple Health permission.
 **Decision:** Use `com.jamestran.bodyos` as the app bundle identifier for Xcode signing under James Tran's Personal Team. Verify the app on device by installing with `devicectl`, trusting the local developer profile on iPhone, connecting Apple Health from Sources, and confirming real Apple Watch data appears.

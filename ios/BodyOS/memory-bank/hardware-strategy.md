@@ -38,6 +38,10 @@ So today, the router falls back to:
 2. **HealthKit source attribution.** Distinguish Apple Watch, iPhone, and future scale samples inside Apple Health instead of labeling aggregates too broadly.
 3. **Don't chase Garmin** unless serious endurance training becomes a goal.
 
+## Source attribution readiness
+
+HealthKit movement and weight reads now preserve source class before ingestion. Steps and active calories can remain Apple Watch or iPhone sourced; HealthKit body-mass samples can be classified as smart scale, Oura bridge, iPhone, or manual where sample metadata exposes enough detail. This is ready for simulator/unit coverage, but physical iPhone testing still needs to confirm Apple's real source names for James's devices and any future scale.
+
 ## Important: never trust wearable calorie burn
 
 PRD §6 explicit principle. Use it as directional input; calibrate the BMR + activity model against the weight trend over multi-week windows. If the system "thinks" James is in a 500-cal deficit and the trend doesn't move in 3 weeks, the math is wrong — adjust assumed burn, not the user's behavior.

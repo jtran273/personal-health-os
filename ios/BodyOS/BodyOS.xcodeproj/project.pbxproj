@@ -59,6 +59,9 @@
 		B4B9EAA05709220E1BB70551 /* MealsViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DAB55E909F70103339655FC5 /* MealsViewModelTests.swift */; };
 		B57DA733A6C9351F965F1195 /* Tokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07EAE81E954636926E7A37D6 /* Tokens.swift */; };
 		B730D09A587AA97822765B56 /* SwiftDataLedgerStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DCD1EF4DE001C2F3A4344F7 /* SwiftDataLedgerStoreTests.swift */; };
+		BEE000000000000000000002 /* WeightTrendService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEE000000000000000000001 /* WeightTrendService.swift */; };
+		BEE000000000000000000004 /* HealthKitSourceAttributionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEE000000000000000000003 /* HealthKitSourceAttributionTests.swift */; };
+		BEE000000000000000000006 /* WeightTrendServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEE000000000000000000005 /* WeightTrendServiceTests.swift */; };
 		C23FD9ADBF135C167D0489B7 /* JetBrainsMono-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = BADCC2C6BC5ADF6B1F197833 /* JetBrainsMono-Regular.ttf */; };
 		C4FAB45618E044BCB012D4B7 /* DeficitEstimator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60D0849DC3FE4D4029CA6C30 /* DeficitEstimator.swift */; };
 		C87ED361FB07E0DBDD5B6024 /* BodyLedgerViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD1FBBB15D6ED0F34624ECF /* BodyLedgerViewModelTests.swift */; };
@@ -144,6 +147,9 @@
 		BB1C6D74BD3A4F9AFC8CCFD4 /* BodyLedgerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyLedgerViewModel.swift; sourceTree = "<group>"; };
 		BB30B94C16EB073CFB4973A0 /* MealLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealLogView.swift; sourceTree = "<group>"; };
 		BEC8F7B254353E81B8E3949F /* TodayViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayViewModel.swift; sourceTree = "<group>"; };
+		BEE000000000000000000001 /* WeightTrendService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightTrendService.swift; sourceTree = "<group>"; };
+		BEE000000000000000000003 /* HealthKitSourceAttributionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitSourceAttributionTests.swift; sourceTree = "<group>"; };
+		BEE000000000000000000005 /* WeightTrendServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightTrendServiceTests.swift; sourceTree = "<group>"; };
 		BF089F3BF8F7CB42DA94B65E /* OuraTokenStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OuraTokenStore.swift; sourceTree = "<group>"; };
 		C1097CEB4DBC7FBBA01B1FAC /* LedgerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LedgerStore.swift; sourceTree = "<group>"; };
 		CB03CB653C13A1525A479478 /* BodyOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BodyOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -313,11 +319,13 @@
 				444B958370EB603BDF3E8E9E /* DeficitEstimatorTests.swift */,
 				49E675A325482AA86CE69094 /* HealthDataRouterTests.swift */,
 				8F52B98F1424F8C519320647 /* HealthKitIngestorTests.swift */,
+				BEE000000000000000000003 /* HealthKitSourceAttributionTests.swift */,
 				EA9C3F12249885A547ED8875 /* LedgerCoverageTests.swift */,
 				DAB55E909F70103339655FC5 /* MealsViewModelTests.swift */,
 				7C580235C35C22A26F43C24A /* MetricSampleTests.swift */,
 				CC6CA31CCE1CCDE0E5A44A18 /* SourcesViewModelTests.swift */,
 				6DCD1EF4DE001C2F3A4344F7 /* SwiftDataLedgerStoreTests.swift */,
+				BEE000000000000000000005 /* WeightTrendServiceTests.swift */,
 				AA7FE89C717027174FCD4875 /* WeightViewModelTests.swift */,
 			);
 			path = BodyOSTests;
@@ -368,6 +376,7 @@
 				8114E8B9DC1F3F92C406D431 /* OuraService.swift */,
 				3CFA06FE7A5FD83DEF2AB52A /* SwiftDataLedgerStore.swift */,
 				7C10B5344E71BF7D68EE3605 /* WeightService.swift */,
+				BEE000000000000000000001 /* WeightTrendService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -537,6 +546,7 @@
 				20932071470244A99AC04C6B /* WeeklyReviewViewModel.swift in Sources */,
 				8C568BDCB9D944545847E19A /* WeightEntry.swift in Sources */,
 				1599B5DC416267C3DBEEC5C3 /* WeightService.swift in Sources */,
+				BEE000000000000000000002 /* WeightTrendService.swift in Sources */,
 				DADF2ECF12C3087A669E7696 /* WeightView.swift in Sources */,
 				FDCC5C374DBBB35B04709A78 /* WeightViewModel.swift in Sources */,
 			);
@@ -551,11 +561,13 @@
 				CC4D5AFAD1BB49DAF0681CDD /* DeficitEstimatorTests.swift in Sources */,
 				3E8042351F06A60B6BC4BF46 /* HealthDataRouterTests.swift in Sources */,
 				72B467B6DAA733DB76075B75 /* HealthKitIngestorTests.swift in Sources */,
+				BEE000000000000000000004 /* HealthKitSourceAttributionTests.swift in Sources */,
 				FB8EACC386B5B2CF33979F64 /* LedgerCoverageTests.swift in Sources */,
 				B4B9EAA05709220E1BB70551 /* MealsViewModelTests.swift in Sources */,
 				E241AACA8F903A49ED9508A5 /* MetricSampleTests.swift in Sources */,
 				4A83EFBFB60DE0584672AEA7 /* SourcesViewModelTests.swift in Sources */,
 				B730D09A587AA97822765B56 /* SwiftDataLedgerStoreTests.swift in Sources */,
+				BEE000000000000000000006 /* WeightTrendServiceTests.swift in Sources */,
 				8FAC4DBADDF02E4391FF4386 /* WeightViewModelTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

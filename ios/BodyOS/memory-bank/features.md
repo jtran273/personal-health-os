@@ -16,6 +16,17 @@ Status legend: `requested` · `in-progress` · `shipped` · `deferred`
 
 ## Shipped — additions
 
+### Health source attribution + weight trend calibration foundation (2026-05-21)
+**Ask:** Improve the iOS health-data foundation for Apple Watch now and smart scale later.
+
+**Delivered:**
+- HealthKit movement ingestion now preserves source/confidence from the reader boundary instead of relabeling all steps and active energy as Apple Watch.
+- HealthKit weight reads classify sample metadata as Apple Watch/iPhone/Oura bridge/smart scale/manual where possible, with smart-scale weight allowed to replace lower-confidence phone weight while manual weight remains protected.
+- Added `WeightTrendService` for 7/14/28-day weight trend summaries, insufficient-data flags, and deficit-vs-scale calibration deltas.
+- Weekly Review now loads a 28-day window for calibration while keeping the visible weekly charts/plans focused on the current 7 days.
+- Today open loops now cap prompts and distinguish "Apple Health not connected" from "Apple Watch data not readable" instead of showing noisy HRV prompts before any wearable data exists.
+- Added unit coverage for source classification, HealthKit source-preserving ingestion, smart-scale precedence, trend windows, insufficient trend data, and calibration edge cases.
+
 ### Real-device HealthKit verification + Today open-loop actions (2026-05-21)
 **Ask:** Test the connected Apple Health path, then keep building high-priority features/tests/docs.
 

@@ -22,8 +22,8 @@ final class HealthKitIngestorTests: XCTestCase {
         let weight = WeightEntry(date: day, weightKg: 81.2, source: .iphone, confidence: 0.8)
         let healthKit = MockHealthKitReader(
             sleep: sleep,
-            steps: 9_876,
-            activeEnergy: 540,
+            steps: MetricSample(value: 9_876, source: .appleWatch, confidence: 0.75, capturedAt: day),
+            activeEnergy: MetricSample(value: 540, source: .appleWatch, confidence: 0.45, capturedAt: day),
             weight: weight
         )
 
@@ -70,23 +70,54 @@ final class HealthKitIngestorTests: XCTestCase {
 
         XCTAssertEqual(result?.weight, manualWeight)
     }
+
+    func testIngestPreservesIPhoneMovementAttribution() async throws {
+        let store = InMemoryLedgerStore()
+        let calendar = Calendar.current
+        let day = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 5, day: 21)))
+        let healthKit = MockHealthKitReader(
+            steps: MetricSample(value: 1_200, source: .iphone, confidence: 0.55, capturedAt: day),
+            activeEnergy: MetricSample(value: 90, source: .iphone, confidence: 0.35, capturedAt: day)
+        )
+
+        let result = try await HealthKitIngestor(healthKit: healthKit, store: store).ingest(date: day)
+
+        XCTAssertEqual(result?.steps?.source, .iphone)
+        XCTAssertEqual(result?.steps?.confidence, 0.55)
+        XCTAssertEqual(result?.activeCalories?.source, .iphone)
+        XCTAssertEqual(result?.activeCalories?.confidence, 0.35)
+    }
+
+    func testSmartScaleWeightCanReplacePhoneHealthWeight() async throws {
+        let store = InMemoryLedgerStore()
+        let calendar = Calendar.current
+        let day = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 5, day: 21)))
+        let phoneWeight = WeightEntry(date: day, weightKg: 82.0, source: .iphone, confidence: 0.8)
+        await store.upsert(DailyLedgerEntry(date: day, weight: phoneWeight))
+        let scaleWeight = WeightEntry(date: day, weightKg: 81.8, source: .smartScale, confidence: 0.98)
+        let healthKit = MockHealthKitReader(weight: scaleWeight)
+
+        let result = try await HealthKitIngestor(healthKit: healthKit, store: store).ingest(date: day)
+
+        XCTAssertEqual(result?.weight, scaleWeight)
+    }
 }
 
 private struct MockHealthKitReader: HealthKitReading {
     var sleep: SleepRecovery?
-    var steps: Int?
-    var activeEnergy: Int?
+    var steps: MetricSample<Int>?
+    var activeEnergy: MetricSample<Int>?
     var weight: WeightEntry?
 
     func fetchSleepRecovery(for date: Date) async throws -> SleepRecovery? {
         sleep
     }
 
-    func fetchSteps(for date: Date) async throws -> Int? {
+    func fetchSteps(for date: Date) async throws -> MetricSample<Int>? {
         steps
     }
 
-    func fetchActiveEnergy(for date: Date) async throws -> Int? {
+    func fetchActiveEnergy(for date: Date) async throws -> MetricSample<Int>? {
         activeEnergy
     }
 

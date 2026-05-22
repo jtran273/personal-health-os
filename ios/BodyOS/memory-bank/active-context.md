@@ -2,7 +2,7 @@
 
 What's being worked on *right now*. Update at the start and end of every session.
 
-**Last updated:** 2026-05-21 PT (real-device HealthKit verified)
+**Last updated:** 2026-05-21 PT (health source attribution + weight trend foundation)
 
 ## Current state
 
@@ -61,6 +61,16 @@ Hand-off doc for the next agent: [`HANDOFF.md`](../HANDOFF.md).
   - Body: `/tmp/bodyos-body-persistence-weight.png`
   - Weekly: `/tmp/bodyos-weekly-0403.png`
   - Sources: `/tmp/bodyos-sources-oura-manage.png`
+
+## Latest session notes — source attribution / weight calibration lane
+
+- HealthKit movement reads now return source-attributed `MetricSample<Int>` values, so `HealthKitIngestor` preserves iPhone vs Apple Watch step/active-energy provenance instead of overwriting everything as `.appleWatch`.
+- HealthKit weight reads now classify sample metadata into `.smartScale`, `.oura`, `.iphone`, or `.manual` where possible. Manual same-day weight still wins over passive HealthKit weight; higher-confidence smart-scale weight can replace phone-sourced Health weight.
+- `WeightTrendService` computes 7/14/28-day trend summaries, marks insufficient data, and compares estimated deficit against scale-implied deficit for calibration.
+- Weekly Review now fetches a 28-day ledger window for calibration math while keeping week UI summaries scoped to the visible 7 days.
+- Today open loops are capped to 3 and distinguish missing permission from readable-but-empty Apple Watch data.
+- Added tests: `HealthKitSourceAttributionTests`, expanded `HealthKitIngestorTests`, and `WeightTrendServiceTests`.
+- Local validation in this worktree: `swiftc -parse $(find BodyOS -name "*.swift")` passed. `xcodebuild`/`swiftc -typecheck` were blocked because `/Applications/Xcode.app/Contents/Developer` is missing here; `xcodegen` is also not installed, so the generated project was updated manually for new Swift files.
 
 ## Repo note
 
