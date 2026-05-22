@@ -10,14 +10,17 @@ handoff in `ios/BodyOS/HANDOFF.md`.
 2. **Trust OpenClaw ingestion.** Require `OPENCLAW_INGESTION_TOKEN` on write routes and save the
    raw meal/weight event before normalization.
 3. **Finish meal text path.** Parse common OpenClaw meal text into calories, protein, and notes;
-   preserve the original text on the raw event.
+   preserve the original text on the raw event. Current backend foundation accepts text/photo
+   inputs, saves corrected meals as Known Foods, reuses exact known-food matches, and refuses to
+   invent unmatched photo/text macros until an estimator is wired in.
 4. **Expose daily summary.** Add an endpoint that returns body mode, missing signals, and one
    concise action for OpenClaw to send.
 
 ## Next
 
 1. **Meal photo queue.** Accept a photo URL or uploaded asset, enqueue macro estimation, and write
-   low/medium-confidence estimates back to the ledger.
+   low/medium-confidence estimates back to the ledger. Do not persist raw images outside local/dev
+   gitignored storage; store only bounded URLs or estimator outputs in raw events.
 2. **Weight trend calibration.** Use 7-28 day weight trend plus logged intake to adjust calorie
    burn assumptions. Never treat wearable calorie burn as exact.
 3. **HealthKit source attribution.** Distinguish Apple Watch, iPhone, and future smart-scale samples

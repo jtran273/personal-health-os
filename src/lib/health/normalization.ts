@@ -1,5 +1,5 @@
 import { classifyBodyMode } from "./body-mode";
-import type { MealLog, MetricValue, NormalizedDailyLedger, RawHealthEvent, WearableSource } from "./types";
+import type { MealLog, MetricSource, MetricValue, NormalizedDailyLedger, RawHealthEvent } from "./types";
 
 export interface BuildDailyLedgerOptions {
   date: string;
@@ -26,6 +26,7 @@ export function buildNormalizedDailyLedger(options: BuildDailyLedgerOptions): Bu
 
   applyOuraEvents(ledger, dayEvents);
   applyWeight(ledger, dayEvents, allWeightEvents);
+  applyEstimatedDeficit(ledger);
 
   const bodyMode = classifyBodyMode({
     readinessScore: ledger.readinessScore,
@@ -125,21 +126,52 @@ export function calculateWeightTrendKgPerWeek(events: RawHealthEvent[]): number 
 function mealFromEvent(event: RawHealthEvent): MealLog {
   const text = readString(event.payload, "text");
   const photoUrl = readString(event.payload, "photoUrl");
+  const correctedCalories = readNumber(event.payload, "correctedCalories");
+  const correctedProtein = readNumber(event.payload, "correctedProteinGrams");
   const calories = readNumber(event.payload, "estimatedCalories");
   const protein = readNumber(event.payload, "estimatedProteinGrams");
+  const caloriesSource = readMetricSource(event.payload, "estimatedCaloriesSource") ?? "openclaw";
+  const proteinSource = readMetricSource(event.payload, "estimatedProteinGramsSource") ?? "openclaw";
+  const confidence = readConfidence(event.payload, "estimationConfidence") ?? "low";
+  const knownFoodId = readString(event.payload, "knownFoodId");
+  const knownFoodName = readString(event.payload, "knownFoodName");
+  const entrySource = readMealEntrySource(event.payload, "entrySource") ?? inferMealEntrySource(text, photoUrl, caloriesSource);
 
   return {
     id: event.id,
     loggedAt: event.observedAt,
     source: "openclaw",
+    entrySource,
     text,
     photoUrl,
-    estimatedCalories: calories === undefined ? undefined : metric(calories, "openclaw", "low"),
-    estimatedProteinGrams: protein === undefined ? undefined : metric(protein, "openclaw", "low")
+    knownFoods: knownFoodId && knownFoodName ? [{ id: knownFoodId, name: knownFoodName }] : undefined,
+    estimatedCalories:
+      correctedCalories === undefined
+        ? calories === undefined
+          ? undefined
+          : metric(calories, caloriesSource, confidence)
+        : metric(correctedCalories, "manual_entry", "high", "User-corrected meal value."),
+    estimatedProteinGrams:
+      correctedProtein === undefined
+        ? protein === undefined
+          ? undefined
+          : metric(protein, proteinSource, confidence)
+        : metric(correctedProtein, "manual_entry", "high", "User-corrected meal value.")
   };
 }
 
-function metric<T>(value: T, source: WearableSource, confidence: MetricValue<T>["confidence"], notes?: string): MetricValue<T> {
+function applyEstimatedDeficit(ledger: NormalizedDailyLedger): void {
+  const intake = ledger.meals.reduce((sum, meal) => sum + (meal.estimatedCalories?.value ?? 0), 0);
+  if (!ledger.activeEnergyCalories || intake <= 0) return;
+  ledger.estimatedDeficitCalories = metric(
+    Math.round(ledger.activeEnergyCalories.value - intake),
+    "openclaw",
+    "low",
+    "Active-energy minus logged meal calories only; excludes basal burn and is not a medical claim."
+  );
+}
+
+function metric<T>(value: T, source: MetricSource, confidence: MetricValue<T>["confidence"], notes?: string): MetricValue<T> {
   return { value, source, confidence, notes };
 }
 
@@ -164,6 +196,47 @@ function readNumber(payload: unknown, path: string): number | undefined {
 function readString(payload: unknown, path: string): string | undefined {
   const value = readPath(payload, path);
   return typeof value === "string" && value.trim().length > 0 ? value : undefined;
+}
+
+function readMetricSource(payload: unknown, path: string): MetricSource | undefined {
+  const value = readString(payload, path);
+  if (
+    value === "oura" ||
+    value === "apple_health" ||
+    value === "apple_watch" ||
+    value === "garmin" ||
+    value === "smart_scale" ||
+    value === "openclaw" ||
+    value === "manual" ||
+    value === "known_food" ||
+    value === "meal_photo" ||
+    value === "meal_text" ||
+    value === "manual_entry"
+  ) {
+    return value;
+  }
+  return undefined;
+}
+
+function readConfidence(payload: unknown, path: string): MetricValue<number>["confidence"] | undefined {
+  const value = readString(payload, path);
+  if (value === "high" || value === "medium" || value === "low" || value === "unknown") return value;
+  return undefined;
+}
+
+function readMealEntrySource(payload: unknown, path: string): MealLog["entrySource"] | undefined {
+  const value = readString(payload, path);
+  if (value === "known_food" || value === "meal_photo" || value === "meal_text" || value === "manual_entry" || value === "unknown") {
+    return value;
+  }
+  return undefined;
+}
+
+function inferMealEntrySource(text: string | undefined, photoUrl: string | undefined, source: MetricSource): MealLog["entrySource"] {
+  if (source === "known_food" || source === "manual_entry" || source === "meal_photo" || source === "meal_text") return source;
+  if (photoUrl) return "meal_photo";
+  if (text) return "meal_text";
+  return "unknown";
 }
 
 function readPath(payload: unknown, path: string): unknown {

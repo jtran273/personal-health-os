@@ -15,6 +15,11 @@ export interface OpenClawMealInput {
   photoUrl?: string;
   loggedAt?: string;
   externalId?: string;
+  correctedCalories?: number;
+  correctedProteinGrams?: number;
+  saveAsKnownFood?: boolean;
+  knownFoodName?: string;
+  servingDescription?: string;
 }
 
 export interface OpenClawWeightInput {
@@ -58,12 +63,35 @@ export function validateMealInput(input: unknown): OpenClawMealInput {
   const photoUrl = optionalString(input.photoUrl, "photoUrl");
   const loggedAt = input.loggedAt === undefined ? undefined : assertValidIsoDateTime(input.loggedAt, "loggedAt");
   const externalId = optionalString(input.externalId, "externalId");
+  const correctedCalories = optionalNumber(input.correctedCalories, "correctedCalories", 0, 5000);
+  const correctedProteinGrams = optionalNumber(input.correctedProteinGrams, "correctedProteinGrams", 0, 350);
+  const saveAsKnownFood = optionalBoolean(input.saveAsKnownFood, "saveAsKnownFood") ?? false;
+  const knownFoodName = optionalString(input.knownFoodName, "knownFoodName");
+  const servingDescription = optionalString(input.servingDescription, "servingDescription");
 
   if (!text && !photoUrl) {
     throw new ValidationError("Meal input requires text or photoUrl.");
   }
 
-  return { text, photoUrl, loggedAt, externalId };
+  if (saveAsKnownFood && !knownFoodName && !text) {
+    throw new ValidationError("Saving a known food requires knownFoodName or text.");
+  }
+
+  if (saveAsKnownFood && correctedCalories === undefined && correctedProteinGrams === undefined) {
+    throw new ValidationError("Saving a known food requires corrected calories or protein.");
+  }
+
+  return {
+    text,
+    photoUrl,
+    loggedAt,
+    externalId,
+    correctedCalories,
+    correctedProteinGrams,
+    saveAsKnownFood,
+    knownFoodName,
+    servingDescription
+  };
 }
 
 export function validateWeightInput(input: unknown): OpenClawWeightInput {
@@ -137,6 +165,25 @@ function optionalString(value: unknown, field: string): string | undefined {
   }
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function optionalNumber(value: unknown, field: string, min: number, max: number): number | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new ValidationError(`${field} must be a finite number.`);
+  }
+  if (value < min || value > max) {
+    throw new ValidationError(`${field} must be between ${min} and ${max}.`);
+  }
+  return value;
+}
+
+function optionalBoolean(value: unknown, field: string): boolean | undefined {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value !== "boolean") {
+    throw new ValidationError(`${field} must be a boolean.`);
+  }
+  return value;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

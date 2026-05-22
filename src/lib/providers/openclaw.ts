@@ -25,7 +25,12 @@ export function createOpenClawMealEvent(input: OpenClawMealInput): RawHealthEven
     externalId: input.externalId,
     payload: {
       text: input.text,
-      photoUrl: input.photoUrl
+      photoUrl: input.photoUrl,
+      correctedCalories: input.correctedCalories,
+      correctedProteinGrams: input.correctedProteinGrams,
+      saveAsKnownFood: input.saveAsKnownFood,
+      knownFoodName: input.knownFoodName,
+      servingDescription: input.servingDescription
     }
   };
 
