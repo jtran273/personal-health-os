@@ -52,6 +52,14 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
   CODE_SIGNING_ALLOWED=NO
 ```
 
+CI parity:
+
+```bash
+scripts/ci-ios.sh
+```
+
+Run the command from the repository root. It installs XcodeGen with Homebrew if needed, regenerates `BodyOS.xcodeproj` from `project.yml`, fails if the generated project is out of sync or references `Secrets.plist`, then runs `xcodebuild test` on the first available iOS Simulator. Override simulator selection with `IOS_DESTINATION='platform=iOS Simulator,name=iPhone 17 Pro' scripts/ci-ios.sh`.
+
 Run on the simulator:
 
 ```bash

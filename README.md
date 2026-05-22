@@ -128,15 +128,10 @@ To store the dev ledger somewhere else, set `HEALTH_LEDGER_PATH=/absolute/path/e
 The native BodyOS app is in `ios/BodyOS`. It is currently the most complete product surface.
 
 ```bash
-cd ios/BodyOS
-xcodegen generate
-DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
-  -project BodyOS.xcodeproj \
-  -scheme BodyOS \
-  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
-  -derivedDataPath build \
-  CODE_SIGNING_ALLOWED=NO
+scripts/ci-ios.sh
 ```
+
+`ci-ios.sh` installs XcodeGen with Homebrew if needed, regenerates `BodyOS.xcodeproj` from `project.yml`, verifies the generated project does not reference `Secrets.plist`, and runs `xcodebuild test` on the first available iOS Simulator. To pin a simulator locally, pass `IOS_DESTINATION='platform=iOS Simulator,name=iPhone 17 Pro' scripts/ci-ios.sh`.
 
 For real-device Apple Watch data, use the setup and launch notes in [`ios/BodyOS/README.md`](./ios/BodyOS/README.md). The active bundle id is `com.jamestran.bodyos`.
 
@@ -154,13 +149,7 @@ npm run build
 Run iOS checks when touching Swift, Xcode project config, HealthKit behavior, or iOS docs:
 
 ```bash
-cd ios/BodyOS
-DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
-  -project BodyOS.xcodeproj \
-  -scheme BodyOS \
-  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
-  -derivedDataPath build \
-  CODE_SIGNING_ALLOWED=NO
+scripts/ci-ios.sh
 ```
 
 ## Agent Workflow
