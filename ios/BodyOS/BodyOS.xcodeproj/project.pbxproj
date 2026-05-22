@@ -35,6 +35,7 @@
 		650DD28676853DFCCA7F3E14 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6C9D0F2715ABAAEB073EE74 /* TodayView.swift */; };
 		6F84CB16F75D892DEA11C227 /* MealsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F866E9A306F52DCB19BA03AC /* MealsView.swift */; };
 		70A16850895A4BF843A676FD /* BodyMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86B7962A27815B4DBEC41D44 /* BodyMode.swift */; };
+		70A56C905BB0F4C2776688A1 /* OpenClawHealthExport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5F0CFC6659B24EA5859568E /* OpenClawHealthExport.swift */; };
 		72B467B6DAA733DB76075B75 /* HealthKitIngestorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F52B98F1424F8C519320647 /* HealthKitIngestorTests.swift */; };
 		73C8DB78CADE9B9254A13571 /* TodayViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEC8F7B254353E81B8E3949F /* TodayViewModel.swift */; };
 		745F3240150DCC19A7F0F131 /* BodyModeEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 525382D71A3341F1CAAE042E /* BodyModeEngine.swift */; };
@@ -72,6 +73,7 @@
 		DEBF9C6F8934B2D0F0CF1DFD /* MetricSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = D646A66396D112B1F6F8E2BB /* MetricSample.swift */; };
 		E241AACA8F903A49ED9508A5 /* MetricSampleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C580235C35C22A26F43C24A /* MetricSampleTests.swift */; };
 		F1BA5EAE110EE9F2B07CDA76 /* BodyOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F7C4C0BAF0D949BC640CAC6 /* BodyOSApp.swift */; };
+		F3E88AA1052EF135B4E9ECB8 /* OpenClawHealthExportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4E92621C93484D88D77AEE5 /* OpenClawHealthExportTests.swift */; };
 		F4F09B48835D7BCF020233C0 /* WeightTrendServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DFD17AF9D23C5A22CC2FE2E /* WeightTrendServiceTests.swift */; };
 		F803DF59A6461BE53B2D6A14 /* Confidence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 736F58808352A925EE59AD21 /* Confidence.swift */; };
 		FB0A0EAEA2D4B89A23011B83 /* KnownFood.swift in Sources */ = {isa = PBXBuildFile; fileRef = D17F881668A461DBE6854EEB /* KnownFood.swift */; };
@@ -138,6 +140,8 @@
 		A211A5A70F15861CE5B0CC7B /* OuraIngestor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OuraIngestor.swift; sourceTree = "<group>"; };
 		A2F417D9B2DE1EB06E01D232 /* BodyLedgerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BodyLedgerView.swift; sourceTree = "<group>"; };
 		A43DD9C375A6A1E11E51E49A /* PrimaryButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrimaryButton.swift; sourceTree = "<group>"; };
+		A4E92621C93484D88D77AEE5 /* OpenClawHealthExportTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenClawHealthExportTests.swift; sourceTree = "<group>"; };
+		A5F0CFC6659B24EA5859568E /* OpenClawHealthExport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenClawHealthExport.swift; sourceTree = "<group>"; };
 		A6C9D0F2715ABAAEB073EE74 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
 		AA7FE89C717027174FCD4875 /* WeightViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeightViewModelTests.swift; sourceTree = "<group>"; };
 		AAA86D9AB2E25B285983B971 /* LedgerRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LedgerRow.swift; sourceTree = "<group>"; };
@@ -323,6 +327,7 @@
 				EA9C3F12249885A547ED8875 /* LedgerCoverageTests.swift */,
 				DAB55E909F70103339655FC5 /* MealsViewModelTests.swift */,
 				7C580235C35C22A26F43C24A /* MetricSampleTests.swift */,
+				A4E92621C93484D88D77AEE5 /* OpenClawHealthExportTests.swift */,
 				CC6CA31CCE1CCDE0E5A44A18 /* SourcesViewModelTests.swift */,
 				6DCD1EF4DE001C2F3A4344F7 /* SwiftDataLedgerStoreTests.swift */,
 				8DFD17AF9D23C5A22CC2FE2E /* WeightTrendServiceTests.swift */,
@@ -372,6 +377,7 @@
 				D32D190AC1CCAA6B8C44EE62 /* LedgerCoverage.swift */,
 				C1097CEB4DBC7FBBA01B1FAC /* LedgerStore.swift */,
 				010205E6E650384A68B4944C /* MealLogService.swift */,
+				A5F0CFC6659B24EA5859568E /* OpenClawHealthExport.swift */,
 				A211A5A70F15861CE5B0CC7B /* OuraIngestor.swift */,
 				8114E8B9DC1F3F92C406D431 /* OuraService.swift */,
 				3CFA06FE7A5FD83DEF2AB52A /* SwiftDataLedgerStore.swift */,
@@ -522,6 +528,7 @@
 				DEBF9C6F8934B2D0F0CF1DFD /* MetricSample.swift in Sources */,
 				B2BB3D862E48E13966898236 /* MetricSource.swift in Sources */,
 				B1A36EF58933FD598F4B6062 /* MetricTile.swift in Sources */,
+				70A56C905BB0F4C2776688A1 /* OpenClawHealthExport.swift in Sources */,
 				A4CA2F578D222ACDF06F247F /* OuraAPIError.swift in Sources */,
 				3A9F466704A0671946AC5065 /* OuraConnectionView.swift in Sources */,
 				CC1634355D7B1E1E20B34DD6 /* OuraDTOs.swift in Sources */,
@@ -565,6 +572,7 @@
 				FB8EACC386B5B2CF33979F64 /* LedgerCoverageTests.swift in Sources */,
 				B4B9EAA05709220E1BB70551 /* MealsViewModelTests.swift in Sources */,
 				E241AACA8F903A49ED9508A5 /* MetricSampleTests.swift in Sources */,
+				F3E88AA1052EF135B4E9ECB8 /* OpenClawHealthExportTests.swift in Sources */,
 				4A83EFBFB60DE0584672AEA7 /* SourcesViewModelTests.swift in Sources */,
 				B730D09A587AA97822765B56 /* SwiftDataLedgerStoreTests.swift in Sources */,
 				F4F09B48835D7BCF020233C0 /* WeightTrendServiceTests.swift in Sources */,
