@@ -52,7 +52,8 @@ struct RootTabView: View {
 
             SourcesView(viewModel: SourcesViewModel(
                 healthKitService: dependencies.healthKitService,
-                healthKitIngestor: dependencies.healthKitIngestor
+                healthKitIngestor: dependencies.healthKitIngestor,
+                store: dependencies.ledgerStore
             ))
                 .tabItem { Label("Sources", systemImage: "point.3.connected.trianglepath.dotted") }
                 .tag(RootTab.sources)

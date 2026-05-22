@@ -11,11 +11,14 @@ final class SourcesViewModelTests: XCTestCase {
         let day = try XCTUnwrap(Calendar.current.date(from: DateComponents(year: 2026, month: 5, day: 21)))
         let syncedEntry = DailyLedgerEntry(
             date: day,
-            steps: MetricSample(value: 8_000, source: .appleWatch, confidence: 0.75)
+            steps: MetricSample(value: 8_000, source: .appleWatch, confidence: 0.75),
+            coverageScore: 0.2
         )
+        let store = InMemoryLedgerStore()
+        await store.upsert(syncedEntry)
         let authorizer = MockHealthKitAuthorizer()
         let ingestor = MockRecentHealthIngestor(result: syncedEntry)
-        let viewModel = SourcesViewModel(healthKitService: authorizer, healthKitIngestor: ingestor)
+        let viewModel = SourcesViewModel(healthKitService: authorizer, healthKitIngestor: ingestor, store: store)
 
         await viewModel.connectHealthKit()
 
@@ -24,8 +27,8 @@ final class SourcesViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.healthKitStatus, .connected)
         XCTAssertEqual(viewModel.healthKitMessage, "Synced just now")
         XCTAssertTrue(UserDefaults.standard.bool(forKey: "source.healthKit"))
-        XCTAssertEqual(viewModel.weeklyCoverage, 76)
-        XCTAssertEqual(viewModel.coverageSentence, "Sleep, recovery, movement, and weight routes are ready when data exists.")
+        XCTAssertEqual(viewModel.weeklyCoverage, 20)
+        XCTAssertEqual(viewModel.coverageSentence, "Recent ledger rows are present. Check Today and Body for source, freshness, and confidence per metric.")
     }
 
     func testConnectHealthKitFailureKeepsSourceAvailable() async {
@@ -52,7 +55,7 @@ final class SourcesViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.healthKitStatus, .connectedNoData)
         XCTAssertEqual(viewModel.healthKitMessage, "Permission set; no recent Apple Health samples")
         XCTAssertTrue(UserDefaults.standard.bool(forKey: "source.healthKit"))
-        XCTAssertEqual(viewModel.weeklyCoverage, 6)
+        XCTAssertEqual(viewModel.weeklyCoverage, 0)
         XCTAssertEqual(viewModel.coverageSentence, "Apple Health permission is set; waiting for readable Apple Watch samples.")
     }
 
@@ -76,6 +79,21 @@ final class SourcesViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.appleHealthPilotRows.first(where: { $0.title == "Apple Watch source" })?.status, .live)
         XCTAssertEqual(viewModel.appleHealthPilotRows.first(where: { $0.title == "Sample/dev data" })?.status, .sample)
         XCTAssertEqual(viewModel.appleHealthPilotRows.first(where: { $0.title == "Oura fallback" })?.status, .dormant)
+    }
+
+    func testRefreshWithPermissionButEmptyLedgerShowsConnectedNoData() async {
+        UserDefaults.standard.set(true, forKey: "source.healthKit")
+        let viewModel = SourcesViewModel(
+            healthKitService: MockHealthKitAuthorizer(),
+            healthKitIngestor: MockRecentHealthIngestor(result: nil),
+            store: InMemoryLedgerStore()
+        )
+
+        await viewModel.refresh()
+
+        XCTAssertEqual(viewModel.healthKitStatus, .connectedNoData)
+        XCTAssertEqual(viewModel.weeklyCoverage, 0)
+        XCTAssertEqual(viewModel.coverageSentence, "Apple Health permission is set; waiting for readable Apple Watch samples.")
     }
 }
 

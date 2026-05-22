@@ -18,10 +18,15 @@ final class AppDependencies {
 
     init() {
         let store: any LedgerStore
-        if let persistentStore = try? SwiftDataLedgerStore.makeDefault() {
-            store = persistentStore
-        } else {
+        do {
+            store = try SwiftDataLedgerStore.makeDefault()
+        } catch {
+            #if DEBUG
+            assertionFailure("SwiftData ledger store failed; using preview-only in-memory ledger: \(error)")
             store = InMemoryLedgerStore()
+            #else
+            fatalError("BodyOS requires the persistent SwiftData ledger store at runtime: \(error)")
+            #endif
         }
 
         let oura = OuraService()

@@ -27,7 +27,8 @@ struct SourcesView: View {
         }
         .scrollIndicators(.hidden)
         .background(Theme.background)
-        .sheet(isPresented: $showOuraSheet, onDismiss: viewModel.refresh) {
+        .task { await viewModel.refresh() }
+        .sheet(isPresented: $showOuraSheet, onDismiss: { Task { await viewModel.refresh() } }) {
             NavigationStack {
                 OuraConnectionView()
             }
@@ -175,13 +176,17 @@ struct SourcesView: View {
     private var knownFoods: some View {
         VStack(alignment: .leading, spacing: 12) {
             SourcesSectionHead(label: "Known foods", right: "learned from chat")
-            VStack(spacing: 0) {
-                KnownFoodRow(name: "Regular breakfast", detail: "Oats, blueberries, coffee", kcal: 410, protein: 12, count: 0)
-                Divider().background(Theme.hairline)
-                KnownFoodRow(name: "Tartine turkey", detail: "Lunch standby", kcal: 720, protein: 38, count: 0)
+            VStack(alignment: .leading, spacing: 6) {
+                Text("No known foods learned yet")
+                    .font(AppFont.caption)
+                    .foregroundStyle(Theme.textPrimary)
+                Text("This stays empty until meals are actually logged. BodyOS should not ship sample foods or calories as live data.")
+                    .font(.custom(Tokens.FontFamily.sansRegular, size: 11.5))
+                    .foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .padding(.horizontal, 14)
-            .padding(.vertical, 4)
+            .padding(.vertical, 14)
             .background(
                 RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
                     .fill(Theme.surface)
@@ -366,49 +371,6 @@ private struct PilotChecklistRow: View {
         case .sample, .dormant: return Theme.textSecondary
         case .missing: return Theme.red
         }
-    }
-}
-
-private struct KnownFoodRow: View {
-    let name: String
-    let detail: String
-    let kcal: Int
-    let protein: Int
-    let count: Int
-
-    var body: some View {
-        HStack(spacing: 12) {
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [Theme.yellowSoft, Theme.accentSoft],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .frame(width: 32, height: 32)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(name)
-                    .font(AppFont.caption)
-                    .foregroundStyle(Theme.textPrimary)
-                Text("\(detail) - \(kcal) kcal - \(protein)g protein")
-                    .font(.custom(Tokens.FontFamily.sansRegular, size: 11.5))
-                    .foregroundStyle(Theme.textSecondary)
-            }
-
-            Spacer()
-
-            VStack(alignment: .trailing, spacing: 1) {
-                Text("logged")
-                    .font(AppFont.tag)
-                    .foregroundStyle(Theme.textSecondary)
-                Text("\(count)x")
-                    .font(.custom(Tokens.FontFamily.serif, size: 18))
-                    .foregroundStyle(Theme.textPrimary)
-            }
-        }
-        .padding(.vertical, 12)
     }
 }
 

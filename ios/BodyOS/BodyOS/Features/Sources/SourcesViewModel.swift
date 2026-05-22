@@ -17,25 +17,28 @@ final class SourcesViewModel {
     var isOuraConfigured: Bool
     var healthKitStatus: SourceConnectionStatus
     var healthKitMessage: String?
+    var recentEntries: [DailyLedgerEntry] = []
 
     private let healthKitService: any HealthKitAuthorizing
     private let healthKitIngestor: (any RecentHealthIngesting)?
+    private let store: (any LedgerStore)?
 
     init(
         healthKitService: any HealthKitAuthorizing,
-        healthKitIngestor: (any RecentHealthIngesting)? = nil
+        healthKitIngestor: (any RecentHealthIngesting)? = nil,
+        store: (any LedgerStore)? = nil
     ) {
         self.healthKitService = healthKitService
         self.healthKitIngestor = healthKitIngestor
+        self.store = store
         self.isOuraConfigured = OuraTokenStore.shared.isConfigured
-        self.healthKitStatus = UserDefaults.standard.bool(forKey: "source.healthKit") ? .connected : .available
+        self.healthKitStatus = UserDefaults.standard.bool(forKey: "source.healthKit") ? .connectedNoData : .available
     }
 
     var weeklyCoverage: Int {
-        var score = 0
-        if healthKitStatus == .connected { score += 70 }
-        score += 6
-        return min(score, 100)
+        guard healthKitStatus == .connected, !recentEntries.isEmpty else { return 0 }
+        let average = recentEntries.reduce(0.0) { $0 + $1.coverageScore } / Double(recentEntries.count)
+        return Int((average * 100).rounded())
     }
 
     var coverageSentence: String {
@@ -45,7 +48,7 @@ final class SourcesViewModel {
         if healthKitStatus != .connected {
             return "Apple Health would add Apple Watch sleep, HRV, movement, and weight if available."
         }
-        return "Sleep, recovery, movement, and weight routes are ready when data exists."
+        return "Recent ledger rows are present. Check Today and Body for source, freshness, and confidence per metric."
     }
 
     var connectedSources: [BodySource] {
@@ -149,6 +152,7 @@ final class SourcesViewModel {
                 healthKitStatus = .connected
                 healthKitMessage = "Synced just now"
             }
+            await refresh()
         } catch {
             UserDefaults.standard.set(false, forKey: "source.healthKit")
             healthKitStatus = .available
@@ -156,8 +160,15 @@ final class SourcesViewModel {
         }
     }
 
-    func refresh() {
+    func refresh() async {
         isOuraConfigured = OuraTokenStore.shared.isConfigured
+        guard let store else { return }
+        recentEntries = await store.recentEntries(days: 7)
+        guard UserDefaults.standard.bool(forKey: "source.healthKit") else {
+            healthKitStatus = .available
+            return
+        }
+        healthKitStatus = recentEntries.isEmpty ? .connectedNoData : .connected
     }
 
     private var sourceCards: [BodySource] {
@@ -167,7 +178,7 @@ final class SourcesViewModel {
                 name: "Apple Watch",
                 role: "sleep, hrv, resting hr, steps, active energy",
                 status: healthKitStatus,
-                coverage: healthKitStatus == .connected ? 0.82 : 0,
+                coverage: Double(weeklyCoverage) / 100.0,
                 subline: healthKitMessage ?? healthKitSubline,
                 systemImage: "applewatch"
             ),

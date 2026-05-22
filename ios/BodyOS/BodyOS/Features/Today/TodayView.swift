@@ -28,6 +28,7 @@ struct TodayView: View {
             VStack(alignment: .leading, spacing: 0) {
                 statusHeader
                 modeHero
+                waitingState
                 oneThingCard
                 openLoopsSection
                 metricsSection
@@ -183,6 +184,39 @@ struct TodayView: View {
     }
 
     @ViewBuilder
+    private var waitingState: some View {
+        if viewModel.entry == nil {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    Image(systemName: "applewatch")
+                        .font(.system(size: 14, weight: .semibold))
+                    Text("No live ledger row for today")
+                        .font(AppFont.caption)
+                }
+                .foregroundStyle(Theme.textPrimary)
+
+                Text("Today stays empty until Apple Health permission is granted and readable Apple Watch or iPhone samples land. Older rows are kept for trends only; they are not shown as today's metrics.")
+                    .font(.custom(Tokens.FontFamily.sansRegular, size: 12.5))
+                    .lineSpacing(3)
+                    .foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: Tokens.Radius.tile, style: .continuous)
+                    .fill(Theme.surface)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: Tokens.Radius.tile, style: .continuous)
+                    .strokeBorder(Theme.hairline, lineWidth: 1)
+            )
+            .padding(.top, 16)
+            .padding(.horizontal, 16)
+        }
+    }
+
+    @ViewBuilder
     private var openLoopsSection: some View {
         let loops = viewModel.openLoops
         if !loops.isEmpty {
@@ -289,7 +323,7 @@ struct TodayView: View {
                 id: "steps",
                 label: "Steps",
                 value: stepsValue,
-                delta: "so far",
+                delta: steps.map { "captured \(TodayViewModel.timeString($0.capturedAt))" } ?? "missing",
                 trend: trend { entry in entry.steps.map { Double($0.value) } },
                 source: shortSource(steps?.source.displayName),
                 confidence: steps?.confidenceBand ?? .low
@@ -298,7 +332,7 @@ struct TodayView: View {
                 id: "active",
                 label: "Active cal",
                 value: activeCalValue,
-                delta: "estimate",
+                delta: active.map { "captured \(TodayViewModel.timeString($0.capturedAt))" } ?? "missing",
                 trend: trend { entry in entry.activeCalories.map { Double($0.value) } },
                 source: shortSource(active?.source.displayName),
                 confidence: active?.confidenceBand ?? .low
@@ -307,9 +341,9 @@ struct TodayView: View {
                 id: "eaten",
                 label: "Eaten",
                 value: caloriesInValue,
-                delta: mealsSubtitle,
+                delta: mealsSubtitle ?? "missing",
                 trend: trend { entry in entry.meals.isEmpty ? nil : Double(entry.totalCaloriesIn) },
-                source: viewModel.entry?.meals.isEmpty == false ? "Photos" : "-",
+                source: viewModel.entry?.meals.isEmpty == false ? "Photos" : "missing",
                 confidence: viewModel.entry?.meals.isEmpty == false ? .med : .low
             ),
             MetricTileData(
@@ -321,7 +355,7 @@ struct TodayView: View {
                     let total = entry.meals.reduce(0) { $0 + ($1.estimatedProteinG?.value ?? 0) }
                     return total > 0 ? Double(total) : nil
                 },
-                source: viewModel.entry?.meals.isEmpty == false ? "Photos" : "-",
+                source: viewModel.entry?.meals.isEmpty == false ? "Photos" : "missing",
                 confidence: viewModel.entry?.meals.isEmpty == false ? .med : .low
             ),
             MetricTileData(
@@ -441,7 +475,7 @@ struct TodayView: View {
     }
 
     private func shortSource(_ source: String?) -> String {
-        guard let source else { return "-" }
+        guard let source else { return "missing" }
         switch source {
         case "Oura Ring": return "Oura"
         case "Meal Photo": return "Photos"
