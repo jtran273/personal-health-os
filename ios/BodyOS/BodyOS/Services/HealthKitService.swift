@@ -260,7 +260,7 @@ public final class HealthKitService: HealthKitReading {
                     continuation.resume(returning: nil)
                     return
                 }
-                let dominantSource = statistics?.sources()?
+                let dominantSource = statistics?.sources?
                     .compactMap { source -> (HKSource, Double)? in
                         guard let quantity = statistics?.sumQuantity(for: source) else { return nil }
                         return (source, quantity.doubleValue(for: unit))
