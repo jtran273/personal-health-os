@@ -5,7 +5,7 @@ const sampleLedger = buildSampleOpenClawLedger(new Date("2026-05-21T15:30:00.000
 const today = buildTodayInteractionModel(sampleLedger);
 
 const coverageItems = [
-  { label: "Sleep + recovery", source: "Apple Watch / Oura-shaped ledger", status: "flowing" },
+  { label: "Sleep + recovery", source: "Apple Watch / Apple Health", status: "flowing" },
   { label: "Steps + active energy", source: "Apple Health", status: "flowing" },
   { label: "Weight trend", source: "Manual today, scale later", status: "needs scale" },
   { label: "Meals + protein", source: "OpenClaw text/photo", status: "manual fallback" },
@@ -26,7 +26,7 @@ const endpoints = [
   {
     method: "POST",
     path: "/api/integrations/oura/sync",
-    note: "Dormant Oura sync path; useful as provider-pattern reference."
+    note: "Dormant Oura sync path; fallback only, not auto-ingested because a token exists."
   }
 ];
 

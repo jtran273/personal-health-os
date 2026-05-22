@@ -6,8 +6,8 @@ This scorecard keeps device strategy practical. The numbers are useful for choos
 
 | Device / Metric | Evidence Number | Plain-English Read |
 | --- | ---: | --- |
-| Oura HRV | MAPE 5.96% | Strong enough to prioritize for recovery trend decisions. |
-| Oura resting heart rate | CCC 0.98 | Very strong agreement; good default for RHR. |
+| Oura HRV | MAPE 5.96% | Strong fallback evidence if Oura is explicitly re-enabled. |
+| Oura resting heart rate | CCC 0.98 | Very strong agreement; useful fallback for RHR if the ring returns. |
 | Apple Watch active heart rate | 86.3% | Useful for workouts and active periods. |
 | Apple Watch SpO2 | MAE 2.2% | Reasonable consumer signal, not a diagnostic source. |
 | Apple Watch step count | 81.1% | Good enough for daily activity trend. |
@@ -19,8 +19,8 @@ This scorecard keeps device strategy practical. The numbers are useful for choos
 
 ## Product Implications
 
-- Prioritize Oura for sleep, HRV, resting heart rate, readiness, and temperature deviation.
-- Use Apple Watch, Garmin, or HealthKit bridge for movement, steps, and workouts.
-- Use a smart scale or manual weight prompt as the anchor for body composition direction.
+- During James's 14-day Apple Watch trial, prioritize Apple Watch / Apple Health for sleep, HRV, resting heart rate, steps, active energy, and workouts.
+- Keep Oura dormant. A saved token is not permission to auto-ingest; use it only as an explicitly enabled fallback.
+- Use a smart scale or manual/OpenClaw weight prompt as the anchor for body composition direction, with Apple Health body-mass samples accepted when present.
 - Treat calories burned as a recalibrated estimate, not truth.
 - Keep source confidence visible in the domain model so later UI can explain uncertainty without clutter.
