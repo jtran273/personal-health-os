@@ -14,6 +14,7 @@ struct SourcesView: View {
             VStack(alignment: .leading, spacing: 0) {
                 header
                 coverageHero
+                appleHealthPilot
                 routingTable
                 sourceGroup("Connected", sources: viewModel.connectedSources)
                 sourceGroup("Pending", sources: viewModel.pendingSources)
@@ -79,6 +80,32 @@ struct SourcesView: View {
                 .strokeBorder(Theme.hairline, lineWidth: 1)
         )
         .padding(.top, 20)
+        .padding(.horizontal, 16)
+    }
+
+    private var appleHealthPilot: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SourcesSectionHead(label: "Apple Watch pilot", right: "14-day trial")
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(viewModel.appleHealthPilotRows) { row in
+                    PilotChecklistRow(row: row)
+                    if row.id != viewModel.appleHealthPilotRows.last?.id {
+                        Divider().background(Theme.hairline)
+                    }
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 4)
+            .background(
+                RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
+                    .fill(Theme.surface)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
+                    .strokeBorder(Theme.hairline, lineWidth: 1)
+            )
+        }
+        .padding(.top, 24)
         .padding(.horizontal, 16)
     }
 
@@ -286,6 +313,58 @@ private struct SourceCard: View {
         case .pending: return "finish setup"
         case .available: return "connect"
         case .disabled: return ""
+        }
+    }
+}
+
+private struct PilotChecklistRow: View {
+    let row: AppleHealthPilotRow
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: iconName)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(statusColor)
+                .frame(width: 20, height: 20)
+                .padding(.top, 10)
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    Text(row.title)
+                        .font(AppFont.caption)
+                        .foregroundStyle(Theme.textPrimary)
+                    Text(row.status.rawValue)
+                        .font(.custom(Tokens.FontFamily.mono, size: 9))
+                        .tracking(0.7)
+                        .textCase(.uppercase)
+                        .foregroundStyle(statusColor)
+                }
+                Text(row.detail)
+                    .font(.custom(Tokens.FontFamily.sansRegular, size: 11.5))
+                    .lineSpacing(3)
+                    .foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.vertical, 10)
+        }
+    }
+
+    private var iconName: String {
+        switch row.status {
+        case .granted, .live: return "checkmark.circle.fill"
+        case .requested, .checking, .waiting: return "clock.fill"
+        case .sample: return "testtube.2"
+        case .dormant: return "pause.circle.fill"
+        case .missing: return "exclamationmark.circle.fill"
+        }
+    }
+
+    private var statusColor: Color {
+        switch row.status {
+        case .granted, .live: return Theme.green
+        case .requested, .checking, .waiting: return Theme.yellow
+        case .sample, .dormant: return Theme.textSecondary
+        case .missing: return Theme.red
         }
     }
 }

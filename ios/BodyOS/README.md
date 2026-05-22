@@ -72,7 +72,21 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun simctl launch boo
   com.jamestran.bodyos --initial-tab sources
 ```
 
-HealthKit needs a real iPhone for James's Apple Watch data. On device, open **Sources → Apple Watch → Connect** and approve read access for sleep, HRV, resting heart rate, steps, active energy, and body mass.
+HealthKit needs a real iPhone for James's Apple Watch data. On device, open **Sources → Apple Watch → Connect** and approve read access for every BodyOS prompt. For the Apple Watch trial, the checklist is:
+
+| Health permission | What it unlocks in BodyOS |
+| --- | --- |
+| Sleep | Overnight sleep minutes for recovery and Body Mode. |
+| Heart Rate Variability (HRV) | Recovery signal; missing HRV should show as missing data, not fake data. |
+| Resting Heart Rate | Overnight recovery context. |
+| Respiratory Rate | Optional overnight signal when Apple Watch / HealthKit exposes it. |
+| Wrist / Body Temperature | Optional overnight temperature signal when available. |
+| Steps | Daily movement volume, source-attributed to Apple Watch or iPhone. |
+| Active Energy | Directional active-calorie burn; still lower-confidence than scale trend. |
+| Workouts | Exercise context for the Apple Watch trial. |
+| Weight / Body Mass | Manual or smart-scale weight rows bridged through Apple Health. |
+
+iOS does not expose exact per-type read grants back to apps. If BodyOS shows **missing** or **waiting**, verify the toggles manually in **Health app → Sharing → Apps → BodyOS** and refresh Sources after Apple Watch has produced recent samples. Simulator/previews are sample/dev data only; do not use them to judge the Apple Watch pilot. Oura remains dormant/fallback and is not required for the loop.
 
 Real-device verification is known-good on James's iPhone with bundle id `com.jamestran.bodyos` after trusting the local developer profile:
 
