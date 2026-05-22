@@ -2,7 +2,7 @@
 
 What's being worked on *right now*. Update at the start and end of every session.
 
-**Last updated:** 2026-05-21 PT (health source attribution + weight trend foundation)
+**Last updated:** 2026-05-22 PT (Apple Watch pilot permission/status clarity)
 
 ## Current state
 
@@ -32,6 +32,8 @@ Hand-off doc for the next agent: [`HANDOFF.md`](../HANDOFF.md).
 - `LedgerCoverage` is the single daily coverage scorer for HealthKit, Oura, meal, and weight writes.
 - `Secrets.plist` is excluded from XcodeGen resources; keep using Keychain or scheme env vars for any future Oura testing.
 - Sources now runs a recent HealthKit ingest immediately after Apple Health permission succeeds.
+- Sources now includes an Apple Watch pilot checklist that separates missing/requested/granted Health permissions, live-vs-waiting data freshness, Apple Watch live data, simulator/sample data, and dormant Oura fallback.
+- HealthKit authorization now requests the full Apple Watch trial read set: sleep, HRV, resting HR, respiratory rate, body/wrist temperature, steps, active energy, workouts, and weight.
 - Copilot composer can directly log text meals with calories/protein, and falls back to a prefilled manual sheet when calories are missing.
 - HealthKit weight reads do not overwrite a same-day manual weight row.
 - All four custom fonts downloaded and bundled.

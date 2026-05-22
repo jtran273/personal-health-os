@@ -354,7 +354,10 @@ public final class HealthKitService: HealthKitReading {
             HKQuantityType.quantityType(forIdentifier: .bodyMass),
             HKQuantityType.quantityType(forIdentifier: .restingHeartRate),
             HKQuantityType.quantityType(forIdentifier: .heartRateVariabilitySDNN),
-            HKObjectType.categoryType(forIdentifier: .sleepAnalysis)
+            HKQuantityType.quantityType(forIdentifier: .respiratoryRate),
+            HKQuantityType.quantityType(forIdentifier: .bodyTemperature),
+            HKObjectType.categoryType(forIdentifier: .sleepAnalysis),
+            HKObjectType.workoutType()
         ].compactMap { $0 }.asSet()
     }
 

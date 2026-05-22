@@ -66,12 +66,71 @@ final class SourcesViewModel {
 
     var routingRows: [MetricRouteRow] {
         [
-            MetricRouteRow(metric: "Sleep + HRV", source: "Apple Watch", reason: "overnight signal through Apple Health"),
-            MetricRouteRow(metric: "Resting HR", source: "Apple Watch", reason: "overnight recovery context"),
-            MetricRouteRow(metric: "Steps", source: "Apple Watch", reason: "phone/watch movement source"),
-            MetricRouteRow(metric: "Active calories", source: "Apple Watch", reason: "directional only; scale trend wins"),
-            MetricRouteRow(metric: "Weight", source: healthKitStatus == .connected ? "Apple Health" : "manual", reason: "smart scale later"),
+            MetricRouteRow(metric: "Sleep + HRV", source: "Apple Watch", reason: "primary during 14-day Apple Health trial"),
+            MetricRouteRow(metric: "Resting HR", source: "Apple Watch", reason: "primary recovery context through Apple Health"),
+            MetricRouteRow(metric: "Respiratory rate", source: "Apple Watch", reason: "optional Apple Health signal when readable"),
+            MetricRouteRow(metric: "Wrist temperature", source: "Apple Watch", reason: "optional overnight signal if HealthKit exposes it"),
+            MetricRouteRow(metric: "Steps", source: "Apple Watch", reason: "watch first, iPhone fallback"),
+            MetricRouteRow(metric: "Active calories", source: "Apple Watch", reason: "directional only; weight trend recalibrates"),
+            MetricRouteRow(metric: "Workouts", source: "Apple Health", reason: "exercise context during the trial"),
+            MetricRouteRow(metric: "Weight", source: "Scale/manual", reason: "Apple Health weight only when present"),
             MetricRouteRow(metric: "Food intake", source: "OpenClaw", reason: "meal photos + known foods")
+        ]
+    }
+
+    var appleHealthPilotRows: [AppleHealthPilotRow] {
+        let permissionStatus: AppleHealthPilotRow.Status = switch healthKitStatus {
+        case .available, .pending:
+            .missing
+        case .connectedNoData:
+            .requested
+        case .connected:
+            .granted
+        case .disabled:
+            .dormant
+        }
+
+        let freshnessStatus: AppleHealthPilotRow.Status = switch healthKitStatus {
+        case .connected:
+            .live
+        case .connectedNoData:
+            .waiting
+        case .pending:
+            .checking
+        case .available:
+            .missing
+        case .disabled:
+            .dormant
+        }
+
+        let appleWatchStatus: AppleHealthPilotRow.Status = healthKitStatus == .connected ? .live : .waiting
+
+        return [
+            AppleHealthPilotRow(
+                title: "Health permissions",
+                status: permissionStatus,
+                detail: "Sleep, HRV, resting HR, respiratory rate, wrist temperature, steps, active energy, workouts, and weight. iOS hides exact read grants, so verify toggles in Health > Sharing > Apps > BodyOS."
+            ),
+            AppleHealthPilotRow(
+                title: "Data freshness",
+                status: freshnessStatus,
+                detail: healthKitStatus == .connected ? "Recent Apple Health samples synced into the ledger." : "Connect, then refresh after a sleep/workout/day of watch wear."
+            ),
+            AppleHealthPilotRow(
+                title: "Apple Watch source",
+                status: appleWatchStatus,
+                detail: "Live pilot data should come from Apple Watch / Apple Health, not placeholder rows."
+            ),
+            AppleHealthPilotRow(
+                title: "Sample/dev data",
+                status: .sample,
+                detail: "Simulator and preview data are treated as demo-only; use James's iPhone for the 14-day trial."
+            ),
+            AppleHealthPilotRow(
+                title: "Oura fallback",
+                status: .dormant,
+                detail: isOuraConfigured ? "Token is saved, but auto-sync stays off unless explicitly re-enabled." : "No Oura token required for the Apple Watch loop."
+            )
         ]
     }
 
@@ -174,6 +233,25 @@ struct MetricRouteRow: Identifiable, Equatable {
     let reason: String
 
     var id: String { metric }
+}
+
+struct AppleHealthPilotRow: Identifiable, Equatable {
+    enum Status: String, Equatable {
+        case missing
+        case requested
+        case granted
+        case checking
+        case waiting
+        case live
+        case sample
+        case dormant
+    }
+
+    let title: String
+    let status: Status
+    let detail: String
+
+    var id: String { title }
 }
 
 enum SourceConnectionStatus: String, Equatable {

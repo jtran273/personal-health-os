@@ -16,6 +16,15 @@ Status legend: `requested` · `in-progress` · `shipped` · `deferred`
 
 ## Shipped — additions
 
+### Apple Watch pilot permissions + source status clarity (2026-05-22)
+**Ask:** Make the 14-day Apple Watch / Apple Health pilot clear and usable without Oura.
+
+**Delivered:**
+- Added a Sources Apple Watch pilot checklist for Health permissions, data freshness, Apple Watch live data, simulator/sample data, and dormant Oura fallback.
+- HealthKit now requests the complete trial read set: sleep, HRV, resting HR, respiratory rate, body/wrist temperature, steps, active energy, workouts, and weight.
+- README now documents exactly what James should tap on iPhone and what each HealthKit permission unlocks.
+- Added unit coverage for the pilot checklist states so the UI does not blur missing permissions, live samples, sample/dev data, and Oura fallback.
+
 ### Health source attribution + weight trend calibration foundation (2026-05-21)
 **Ask:** Improve the iOS health-data foundation for Apple Watch now and smart scale later.
 
