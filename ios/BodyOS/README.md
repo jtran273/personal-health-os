@@ -58,7 +58,7 @@ CI parity:
 scripts/ci-ios.sh
 ```
 
-Run the command from the repository root. It installs XcodeGen with Homebrew if needed, regenerates `BodyOS.xcodeproj` from `project.yml`, fails if the generated project is out of sync or references `Secrets.plist`, then runs `xcodebuild test` on the first available iOS Simulator. Override simulator selection with `IOS_DESTINATION='platform=iOS Simulator,name=iPhone 17 Pro' scripts/ci-ios.sh`.
+Run the command from the repository root. It installs XcodeGen with Homebrew if needed, regenerates `BodyOS.xcodeproj` from `project.yml`, fails if the generated project is out of sync or references `Secrets.plist`, then runs `xcodebuild test` on the first available iOS Simulator, or skips only that final test step with a warning when the runner exposes no concrete iOS simulator. Override simulator selection with `IOS_DESTINATION='platform=iOS Simulator,name=iPhone 17 Pro' scripts/ci-ios.sh`.
 
 Run on the simulator:
 
