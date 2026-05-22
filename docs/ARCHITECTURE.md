@@ -31,6 +31,27 @@ Normalized metrics are app-level facts:
 
 The normalized layer is allowed to change as algorithms improve. Raw events should remain available for reprocessing.
 
+## Local Persistence
+
+The web backend now has a small `RawHealthEventStore` abstraction in `src/lib/health/ledger`. The default development implementation is append-only JSONL at `.data/health-events.jsonl`, with an in-memory implementation for tests and future adapters.
+
+Writes dedupe on deterministic natural keys:
+
+- `source`
+- `type`
+- provider `externalId` when present
+- otherwise `observedAt`
+
+This is intentionally simple enough to swap for SQLite, Postgres, or a synced local-first store later. The important contract is that raw events preserve provenance and provider payloads, while summary routes normalize from raw events and do not include raw payloads by default.
+
+Current normalization covers:
+
+- Oura daily sleep/readiness/activity fields when present.
+- OpenClaw meal events.
+- OpenClaw/manual-style weight events.
+- A basic recent weight slope in kg/week.
+- Body mode classification from normalized recovery inputs.
+
 ## Source Confidence
 
 Every normalized metric carries confidence:

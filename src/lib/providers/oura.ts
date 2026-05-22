@@ -1,4 +1,5 @@
 import type { RawHealthEvent } from "@/lib/health";
+import { deterministicRawEventId } from "@/lib/health/ledger";
 
 const ouraBaseUrl = "https://api.ouraring.com/v2/usercollection";
 
@@ -52,12 +53,28 @@ async function fetchOuraCollection(
   const payload = (await response.json()) as { data?: unknown[] };
   const receivedAt = new Date().toISOString();
 
-  return (payload.data ?? []).map((item, index) => ({
-    id: `oura:${collection}:${options.startDate}:${index}`,
-    source: "oura",
-    type: collection,
-    observedAt: options.startDate,
-    receivedAt,
-    payload: item
-  }));
+  return (payload.data ?? []).map((item, index) => {
+    const externalId = readString(item, "id") ?? `${collection}:${readString(item, "day") ?? options.startDate}:${index}`;
+    const observedDay = readString(item, "day") ?? options.startDate;
+    const event: RawHealthEvent = {
+      id: "",
+      source: "oura",
+      type: collection,
+      observedAt: `${observedDay}T00:00:00.000Z`,
+      receivedAt,
+      externalId,
+      payload: item
+    };
+
+    return { ...event, id: deterministicRawEventId(event) };
+  });
+}
+
+function readString(payload: unknown, key: string): string | undefined {
+  if (typeof payload !== "object" || payload === null || !(key in payload)) {
+    return undefined;
+  }
+
+  const value = (payload as Record<string, unknown>)[key];
+  return typeof value === "string" ? value : undefined;
 }

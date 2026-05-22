@@ -6,6 +6,7 @@ OpenClaw is the daily interface. This repo holds the source-agnostic health mode
 
 ## Current Status
 
+<<<<<<< HEAD
 - Next.js App Router shell with a static Health OS control surface.
 - Source-agnostic TypeScript health domain model in `src/lib/health`.
 - Safe provider stubs for Oura, HealthKit-style data, and OpenClaw ingestion.
@@ -13,6 +14,15 @@ OpenClaw is the daily interface. This repo holds the source-agnostic health mode
 - OpenClaw-safe API routes under `/api/openclaw/health`.
 - Native SwiftUI iOS app under `ios/BodyOS` with real-device Apple Health ingestion.
 - Product, architecture, roadmap, hardware, and integration docs under `docs/`.
+=======
+- Next.js App Router skeleton with TypeScript.
+- Source-agnostic health domain model in `src/lib/health`.
+- Local-first raw health event ledger under `src/lib/health/ledger`.
+- Basic normalization from raw Oura/OpenClaw events into daily ledgers.
+- API routes for daily ledger reads, meal ingestion, and Oura sync backed by local JSONL storage.
+- Native SwiftUI iOS app under `ios/BodyOS` with verified real-device HealthKit ingestion.
+- Product and architecture docs under `docs/`.
+>>>>>>> origin/grace/health-ledger-persistence-0521
 
 No auth, payment, cloud persistence, or secret-backed production ingestion is in place yet.
 
@@ -140,6 +150,7 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcodebuild test \
   CODE_SIGNING_ALLOWED=NO
 ```
 
+<<<<<<< HEAD
 ## Agent Workflow
 
 Before non-trivial work:
@@ -151,3 +162,28 @@ Before non-trivial work:
 5. Update docs or memory-bank files when a durable project decision changes.
 
 The current highest-leverage build path is durable OpenClaw meal/weight ingestion, then weekly weight-trend recalibration once enough real rows exist.
+=======
+Do not commit real tokens.
+
+## Local Health Ledger
+
+Development writes raw provider events to `.data/health-events.jsonl` by default. The file is git-ignored and is meant for local iteration only. Each event keeps its raw provider payload internally, while public summary routes return normalized meals and ledger metrics without echoing raw payloads.
+
+Useful local calls:
+
+```bash
+curl "http://localhost:3000/api/health/daily-ledger?date=2026-05-21"
+curl "http://localhost:3000/api/health/meals?date=2026-05-21"
+curl -X POST "http://localhost:3000/api/health/meals" \
+  -H "content-type: application/json" \
+  -d '{"text":"eggs and toast","loggedAt":"2026-05-21T15:00:00.000Z"}'
+```
+
+Reset local dev health data:
+
+```bash
+rm -f .data/health-events.jsonl
+```
+
+To store the dev ledger somewhere else, set `HEALTH_LEDGER_PATH=/absolute/path/events.jsonl`.
+>>>>>>> origin/grace/health-ledger-persistence-0521
