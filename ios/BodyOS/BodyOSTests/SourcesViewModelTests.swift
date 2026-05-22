@@ -95,6 +95,80 @@ final class SourcesViewModelTests: XCTestCase {
         XCTAssertEqual(viewModel.weeklyCoverage, 0)
         XCTAssertEqual(viewModel.coverageSentence, "Apple Health permission is set; waiting for readable Apple Watch samples.")
     }
+
+    func testRefreshWithOnlyManualLedgerRowsDoesNotClaimAppleHealthIsLive() async throws {
+        UserDefaults.standard.set(true, forKey: "source.healthKit")
+        let store = InMemoryLedgerStore()
+        let today = Calendar.current.startOfDay(for: Date())
+        await store.upsert(DailyLedgerEntry(
+            date: today,
+            weight: WeightEntry(date: today, weightKg: 82.0, source: .manual),
+            meals: [
+                Meal(
+                    loggedAt: today,
+                    description: "Manual dinner",
+                    estimatedCalories: MetricSample(value: 700, source: .manual, confidence: 0.9)
+                )
+            ],
+            coverageScore: 0.28
+        ))
+        let viewModel = SourcesViewModel(
+            healthKitService: MockHealthKitAuthorizer(),
+            healthKitIngestor: MockRecentHealthIngestor(result: nil),
+            store: store
+        )
+
+        await viewModel.refresh()
+
+        XCTAssertEqual(viewModel.healthKitStatus, .connectedNoData)
+        XCTAssertEqual(viewModel.weeklyCoverage, 0)
+        XCTAssertEqual(viewModel.appleHealthPilotRows.first(where: { $0.title == "Data freshness" })?.status, .waiting)
+        XCTAssertEqual(viewModel.appleHealthPilotRows.first(where: { $0.title == "Apple Watch source" })?.status, .waiting)
+    }
+
+    func testConnectHealthKitWithNoSamplesKeepsNoDataEvenWhenManualRowsExist() async throws {
+        let store = InMemoryLedgerStore()
+        let today = Calendar.current.startOfDay(for: Date())
+        await store.upsert(DailyLedgerEntry(
+            date: today,
+            weight: WeightEntry(date: today, weightKg: 82.0, source: .manual),
+            coverageScore: 0.14
+        ))
+        let viewModel = SourcesViewModel(
+            healthKitService: MockHealthKitAuthorizer(),
+            healthKitIngestor: MockRecentHealthIngestor(result: nil),
+            store: store
+        )
+
+        await viewModel.connectHealthKit()
+
+        XCTAssertEqual(viewModel.healthKitStatus, .connectedNoData)
+        XCTAssertEqual(viewModel.healthKitMessage, "Permission set; no recent Apple Health samples")
+        XCTAssertEqual(viewModel.weeklyCoverage, 0)
+    }
+
+    func testAppleWatchChecklistDoesNotGoLiveForIPhoneOnlyHealthKitRows() async throws {
+        UserDefaults.standard.set(true, forKey: "source.healthKit")
+        let store = InMemoryLedgerStore()
+        let today = Calendar.current.startOfDay(for: Date())
+        await store.upsert(DailyLedgerEntry(
+            date: today,
+            steps: MetricSample(value: 2_000, source: .iphone, confidence: 0.55),
+            coverageScore: 0.14
+        ))
+        let viewModel = SourcesViewModel(
+            healthKitService: MockHealthKitAuthorizer(),
+            healthKitIngestor: MockRecentHealthIngestor(result: nil),
+            store: store
+        )
+
+        await viewModel.refresh()
+
+        XCTAssertEqual(viewModel.healthKitStatus, .connected)
+        XCTAssertEqual(viewModel.weeklyCoverage, 14)
+        XCTAssertEqual(viewModel.appleHealthPilotRows.first(where: { $0.title == "Data freshness" })?.status, .live)
+        XCTAssertEqual(viewModel.appleHealthPilotRows.first(where: { $0.title == "Apple Watch source" })?.status, .waiting)
+    }
 }
 
 private final class MockHealthKitAuthorizer: HealthKitAuthorizing {
