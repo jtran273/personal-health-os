@@ -10,6 +10,7 @@ OpenClaw is the daily interface. This app is the source-agnostic backend and eve
 - Source-agnostic health domain model in `src/lib/health`.
 - Safe provider stubs for Oura, HealthKit, and OpenClaw ingestion.
 - Placeholder API routes for daily ledger reads, meal ingestion, and Oura sync.
+- Native SwiftUI iOS app under `ios/BodyOS` with verified real-device HealthKit ingestion.
 - Product and architecture docs under `docs/`.
 
 No auth, payment, production persistence, or polished UI is implemented yet. The frontend is intentionally plain so a designer can replace the surface without fighting the backend foundation.
@@ -22,6 +23,18 @@ npm run dev
 ```
 
 Open `http://localhost:3000`.
+
+### iOS app
+
+The native BodyOS app lives in `ios/BodyOS`.
+
+```bash
+cd ios/BodyOS
+xcodegen generate
+xcodebuild test -project BodyOS.xcodeproj -scheme BodyOS -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -derivedDataPath build CODE_SIGNING_ALLOWED=NO
+```
+
+For real-device HealthKit testing, use the setup notes in `ios/BodyOS/README.md`.
 
 ## Checks
 

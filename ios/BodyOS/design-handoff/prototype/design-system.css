@@ -1,0 +1,274 @@
+/* Design-system doc layout — sits alongside Health Copilot tokens.css. */
+
+html, body { margin: 0; padding: 0; background: var(--paper); }
+body { font-family: var(--sans); color: var(--ink); -webkit-font-smoothing: antialiased; }
+
+/* ───── Layout shell ───── */
+.ds-shell {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+.ds-nav {
+  position: sticky; top: 0; align-self: start;
+  height: 100vh; overflow: auto;
+  padding: 36px 24px 36px 32px;
+  border-right: 1px solid var(--hair);
+  background: var(--paper);
+}
+.ds-nav-brand {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 28px;
+}
+.ds-nav-brand .mark {
+  width: 28px; height: 28px; border-radius: 7px;
+  background: var(--ink); color: var(--paper);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--serif); font-size: 18px; line-height: 1;
+}
+.ds-nav-brand .name {
+  font-family: var(--serif); font-size: 18px; line-height: 1;
+  color: var(--ink);
+}
+.ds-nav-brand .ver {
+  font-family: var(--mono); font-size: 10px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  padding: 3px 6px; border-radius: 4px; background: var(--paper-deep);
+}
+.ds-nav-section {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.10em;
+  text-transform: uppercase; color: var(--muted);
+  margin: 22px 0 6px;
+}
+.ds-nav a {
+  display: block;
+  padding: 5px 0;
+  font-size: 13.5px;
+  color: var(--ink-2);
+  text-decoration: none;
+  transition: color .15s;
+}
+.ds-nav a:hover { color: var(--clay); }
+.ds-nav a.is-active { color: var(--ink); font-weight: 500; }
+
+/* ───── Main scroll area ───── */
+.ds-main { padding: 64px 56px 120px; max-width: 1080px; }
+
+/* ───── Hero ───── */
+.ds-hero { margin-bottom: 72px; }
+.ds-hero .kicker {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.10em;
+  text-transform: uppercase; color: var(--clay);
+  margin-bottom: 14px;
+}
+.ds-hero h1 {
+  font-family: var(--serif); font-weight: 400;
+  font-size: 76px; line-height: 1.02; letter-spacing: -0.02em;
+  margin: 0 0 24px; color: var(--ink);
+  max-width: 760px;
+}
+.ds-hero .lede {
+  font-family: var(--serif); font-style: italic;
+  font-size: 22px; line-height: 1.4;
+  color: var(--ink-2); max-width: 620px;
+  margin: 0 0 28px;
+}
+.ds-hero .meta {
+  display: flex; gap: 28px; padding-top: 18px;
+  border-top: 1px solid var(--hair);
+}
+.ds-hero .meta dt {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 4px;
+}
+.ds-hero .meta dd { margin: 0; font-size: 14px; color: var(--ink); }
+
+/* ───── Section heads ───── */
+.ds-section { padding-top: 56px; margin-top: 48px; border-top: 1px solid var(--hair); }
+.ds-section > .num {
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.10em;
+  text-transform: uppercase; color: var(--clay); margin-bottom: 8px;
+}
+.ds-section > h2 {
+  font-family: var(--serif); font-weight: 400;
+  font-size: 44px; line-height: 1; letter-spacing: -0.015em;
+  margin: 0 0 12px; color: var(--ink);
+}
+.ds-section > .blurb {
+  font-size: 15px; line-height: 1.55; color: var(--ink-2);
+  max-width: 620px; margin: 0 0 32px;
+}
+
+/* ───── Sub-block ───── */
+.ds-sub { margin: 40px 0 0; }
+.ds-sub > h3 {
+  font-family: var(--serif); font-weight: 400; font-size: 26px; line-height: 1.15;
+  margin: 0 0 4px; color: var(--ink); letter-spacing: -0.005em;
+}
+.ds-sub > .blurb {
+  font-size: 14px; color: var(--muted); margin: 0 0 18px; line-height: 1.55;
+  max-width: 580px;
+}
+
+/* ───── Cards/panels ───── */
+.ds-panel {
+  background: var(--surface);
+  border: 1px solid var(--hair);
+  border-radius: 16px;
+  padding: 28px;
+}
+.ds-panel.tight { padding: 18px; }
+.ds-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.ds-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.ds-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+/* ───── Color swatches ───── */
+.ds-swatch {
+  aspect-ratio: 4 / 3; border-radius: 12px;
+  background: var(--c, var(--paper-deep));
+  border: 1px solid var(--hair);
+  position: relative; overflow: hidden;
+}
+.ds-swatch-meta {
+  margin-top: 10px;
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+}
+.ds-swatch-name { font-size: 13.5px; color: var(--ink); }
+.ds-swatch-tok { font-family: var(--mono); font-size: 10.5px; color: var(--muted); }
+.ds-swatch-use { font-size: 11.5px; color: var(--muted); margin-top: 3px; line-height: 1.45; }
+
+/* ───── Type specimen rows ───── */
+.ds-type-row {
+  display: grid; grid-template-columns: 140px 1fr 140px;
+  align-items: baseline; gap: 24px;
+  padding: 22px 0; border-bottom: 1px solid var(--hair);
+}
+.ds-type-row:last-child { border-bottom: 0; }
+.ds-type-label .name { font-size: 13px; color: var(--ink); font-weight: 500; }
+.ds-type-label .tok { font-family: var(--mono); font-size: 10.5px; color: var(--muted); margin-top: 4px; }
+.ds-type-spec { font-family: var(--mono); font-size: 10.5px; color: var(--muted); text-align: right; }
+
+/* ───── Code blocks ───── */
+.ds-code {
+  background: #1a1714; color: #eee5d4;
+  border-radius: 12px;
+  padding: 20px 22px;
+  font-family: var(--mono); font-size: 12.5px; line-height: 1.55;
+  overflow: auto;
+  margin: 0;
+}
+.ds-code .k { color: #ffb380; }      /* keyword */
+.ds-code .t { color: #b8e3c4; }      /* type */
+.ds-code .s { color: #e6c5e0; }      /* string */
+.ds-code .c { color: #8a7f6f; font-style: italic; } /* comment */
+.ds-code .p { color: #d4a8a8; }      /* prop */
+.ds-code .n { color: #f5d99a; }      /* number */
+
+.ds-tab-row { display: flex; gap: 4px; margin-bottom: 12px; }
+.ds-tab {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 6px 12px; border-radius: 999px;
+  background: var(--paper-deep); color: var(--muted);
+  cursor: pointer; user-select: none;
+  border: 1px solid transparent;
+}
+.ds-tab.is-active { background: var(--ink); color: var(--paper); }
+
+/* ───── Component frame (mobile-y preview) ───── */
+.ds-preview {
+  background: var(--paper-deep);
+  border-radius: 14px;
+  padding: 32px;
+  display: flex; align-items: center; justify-content: center;
+  min-height: 200px;
+  position: relative; overflow: hidden;
+}
+.ds-preview.compact { padding: 20px; min-height: 120px; }
+.ds-preview.tall { min-height: 320px; }
+.ds-preview-grid { display: grid; gap: 24px; align-items: center; justify-items: center; width: 100%; }
+.ds-preview .corner-label {
+  position: absolute; top: 10px; left: 14px;
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--muted);
+}
+
+/* ───── Spec table ───── */
+.ds-spec {
+  width: 100%; border-collapse: collapse; font-size: 13px;
+}
+.ds-spec th {
+  text-align: left; padding: 10px 12px;
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--muted);
+  border-bottom: 1px solid var(--hair); font-weight: 500;
+}
+.ds-spec td {
+  padding: 10px 12px; border-bottom: 1px solid var(--hair); color: var(--ink-2);
+  vertical-align: top;
+}
+.ds-spec td:first-child { font-family: var(--mono); font-size: 12px; color: var(--ink); }
+.ds-spec tr:last-child td { border-bottom: 0; }
+
+/* ───── Principle cards (number + text) ───── */
+.ds-principle {
+  background: var(--surface); border: 1px solid var(--hair);
+  border-radius: 16px; padding: 24px;
+  display: flex; flex-direction: column; gap: 14px;
+  min-height: 200px;
+}
+.ds-principle .n {
+  font-family: var(--serif); font-size: 28px; color: var(--clay); line-height: 1;
+}
+.ds-principle h4 {
+  font-family: var(--serif); font-size: 22px; font-weight: 400;
+  margin: 0; line-height: 1.25; letter-spacing: -0.005em; color: var(--ink);
+}
+.ds-principle p { font-size: 13.5px; color: var(--muted); line-height: 1.55; margin: 0; }
+
+/* ───── Phone preview ───── */
+.ds-phone {
+  width: 264px; height: 572px;
+  border-radius: 38px; padding: 7px;
+  background: var(--ink);
+  box-shadow: 0 20px 60px -20px rgba(0,0,0,0.4);
+  position: relative;
+  flex-shrink: 0;
+}
+.ds-phone::before {
+  content: ""; position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+  width: 78px; height: 22px; border-radius: 14px; background: #000; z-index: 5;
+}
+.ds-phone-screen {
+  width: 100%; height: 100%; border-radius: 30px; overflow: hidden;
+  background: var(--paper); position: relative;
+}
+
+/* Caption */
+.ds-caption {
+  font-size: 12px; color: var(--muted);
+  margin-top: 10px; line-height: 1.5;
+}
+
+/* Mode preview row */
+.ds-mode-row {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px; margin-top: 20px;
+}
+.ds-mode-cell {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 20px;
+  background: var(--surface); border: 1px solid var(--hair); border-radius: 14px;
+}
+.ds-mode-cell .label {
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--muted);
+}
+.ds-mode-cell .name {
+  font-family: var(--serif); font-size: 20px; color: var(--ink); text-transform: capitalize;
+}
+
+/* Anchor offset (sticky nav) */
+[id] { scroll-margin-top: 24px; }

@@ -1,0 +1,33 @@
+# Xcode
+build/
+DerivedData/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+
+# Swift Package Manager
+.build/
+Packages/
+Package.resolved
+.swiftpm/
+
+# macOS
+.DS_Store
+
+# Secrets / env
+.env
+.env.*
+!.env.example
+BodyOS/Resources/Secrets.plist
+Secrets.plist
+*.p8
+*.p12
+
+# IDE
+.vscode/
+.idea/
+
+# Memory bank — local agent scratch is OK to commit, but ignore drafts
+memory-bank/_drafts/

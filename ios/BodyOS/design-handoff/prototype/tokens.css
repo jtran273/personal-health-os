@@ -1,0 +1,113 @@
+/* Health Copilot — design tokens
+   Warm, editorial, paper-like. No saturated colors except mode chromas. */
+
+:root {
+  /* Paper */
+  --paper:        #f6f1e8;        /* canvas / background */
+  --paper-deep:   #ede6d8;
+  --surface:      #fbf7f0;        /* cards */
+  --surface-2:    #fdfaf3;
+  --hair:         rgba(30, 27, 22, 0.08);
+  --hair-strong:  rgba(30, 27, 22, 0.16);
+
+  /* Ink */
+  --ink:          #1e1b16;
+  --ink-2:        #3a342c;
+  --muted:        #6b6358;
+  --faint:        #a39a8c;
+
+  /* Mode chromas — used as line / fill / orb tint */
+  --green:        oklch(0.58 0.08 152);
+  --green-soft:   oklch(0.92 0.04 152);
+  --yellow:       oklch(0.74 0.10 78);
+  --yellow-soft:  oklch(0.93 0.05 78);
+  --red:          oklch(0.55 0.14 28);
+  --red-soft:     oklch(0.93 0.05 28);
+
+  /* Accent — clay/terracotta */
+  --clay:         oklch(0.60 0.11 40);
+  --clay-soft:    oklch(0.93 0.04 40);
+
+  /* Type */
+  --serif:        'Instrument Serif', 'Source Serif Pro', Georgia, serif;
+  --sans:         'Geist', -apple-system, 'SF Pro Text', system-ui, sans-serif;
+  --mono:         'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+
+  /* Radii */
+  --r-card:       18px;
+  --r-pill:       999px;
+  --r-tile:       12px;
+}
+
+/* Base resets for hosted artboards */
+.hc-root, .hc-root * { box-sizing: border-box; }
+.hc-root {
+  font-family: var(--sans);
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  letter-spacing: -0.005em;
+}
+
+.hc-serif { font-family: var(--serif); letter-spacing: -0.01em; }
+.hc-mono  { font-family: var(--mono);  letter-spacing: 0; }
+
+/* Section / row dividers */
+.hc-rule { height: 1px; background: var(--hair); border: 0; margin: 0; }
+
+/* Source chip (small attribution pill) */
+.hc-src {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--muted);
+  padding: 2px 6px; border-radius: 999px;
+  background: var(--paper-deep);
+}
+.hc-src .dot {
+  width: 5px; height: 5px; border-radius: 999px; background: var(--muted);
+}
+.hc-src.high .dot { background: var(--green); }
+.hc-src.med  .dot { background: var(--yellow); }
+.hc-src.low  .dot { background: var(--red); }
+
+/* Confidence rendered as line quality */
+.hc-conf-high { border: 1px solid var(--hair-strong); }
+.hc-conf-med  { border: 1px dashed var(--hair-strong); }
+.hc-conf-low  { border: 1px dotted var(--hair-strong); }
+
+/* Editorial number */
+.hc-num {
+  font-family: var(--serif);
+  font-weight: 400;
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+  font-feature-settings: "lnum" 1, "tnum" 0;
+}
+
+/* Small caps label */
+.hc-cap {
+  font-family: var(--mono);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.10em;
+  color: var(--muted);
+}
+
+/* Soft card */
+.hc-card {
+  background: var(--surface);
+  border-radius: var(--r-card);
+  border: 1px solid var(--hair);
+}
+
+/* Subtle paper grain */
+.hc-grain::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  opacity: 0.4; mix-blend-mode: multiply;
+  background-image:
+    radial-gradient(rgba(0,0,0,0.025) 1px, transparent 1px),
+    radial-gradient(rgba(0,0,0,0.015) 1px, transparent 1px);
+  background-size: 3px 3px, 7px 7px;
+  background-position: 0 0, 1px 2px;
+}

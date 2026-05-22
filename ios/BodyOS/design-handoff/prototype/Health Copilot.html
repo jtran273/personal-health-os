@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OpenClaw · Body OS</title>
+
+  <!-- Type -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="tokens.css" />
+
+  <style>
+    html, body { margin: 0; padding: 0; background: #ece6d6; font-family: 'Geist', system-ui, sans-serif; }
+    /* Phone-frame wrapper — sits inside design-canvas artboard */
+    .phone-frame {
+      width: 390px; height: 844px; border-radius: 54px;
+      background: #1e1b16; padding: 10px; position: relative;
+      box-shadow: 0 30px 80px -20px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.4);
+    }
+    .phone-frame::before {
+      content: ""; position: absolute; top: 18px; left: 50%; transform: translateX(-50%);
+      width: 110px; height: 32px; border-radius: 20px; background: #000; z-index: 50;
+    }
+    .phone-screen {
+      width: 100%; height: 100%; border-radius: 44px; overflow: hidden;
+      position: relative; background: var(--paper);
+    }
+    .phone-home {
+      position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%);
+      width: 134px; height: 5px; border-radius: 999px; background: rgba(255,255,255,0.55);
+      z-index: 80; pointer-events: none;
+    }
+    .phone-status {
+      position: absolute; top: 0; left: 0; right: 0; height: 50px; padding: 16px 28px 0;
+      display: flex; align-items: center; justify-content: space-between;
+      font-family: var(--sans); font-weight: 600; font-size: 14px; color: var(--ink);
+      z-index: 40; pointer-events: none;
+    }
+    .phone-status .right { display: flex; align-items: center; gap: 4px; opacity: 0.7; }
+    .phone-status .right .bar { width: 3px; background: currentColor; border-radius: 1px; }
+    .phone-status .right .bar.b1 { height: 4px; }
+    .phone-status .right .bar.b2 { height: 6px; }
+    .phone-status .right .bar.b3 { height: 8px; }
+    .phone-status .right .bar.b4 { height: 10px; }
+    .phone-status .battery { width: 22px; height: 11px; border-radius: 3px; border: 1px solid rgba(0,0,0,0.45); position: relative; }
+    .phone-status .battery::after { content: ""; position: absolute; right: -3px; top: 3px; width: 1.5px; height: 5px; border-radius: 1px; background: rgba(0,0,0,0.4); }
+    .phone-status .battery::before { content: ""; position: absolute; inset: 1.5px; border-radius: 1.5px; background: var(--ink); width: 70%; }
+
+    /* Desktop wrapper */
+    .mac-window {
+      width: 1280px; height: 800px; border-radius: 14px; overflow: hidden;
+      background: #fff;
+      box-shadow: 0 40px 100px -20px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.1);
+      position: relative;
+    }
+    .mac-chrome {
+      height: 28px; background: #f0eadb; border-bottom: 1px solid rgba(0,0,0,0.08);
+      display: flex; align-items: center; gap: 6px; padding: 0 12px;
+    }
+    .mac-chrome .light { width: 12px; height: 12px; border-radius: 999px; }
+    .mac-chrome .l1 { background: #ec6a5e; }
+    .mac-chrome .l2 { background: #f5bf4f; }
+    .mac-chrome .l3 { background: #62c554; }
+    .mac-chrome .title { margin: 0 auto; font-family: var(--mono); font-size: 11px; color: rgba(0,0,0,0.45); }
+  </style>
+</head>
+<body>
+  <!-- React + Babel -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- Starter components -->
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+
+  <!-- Data + atoms -->
+  <script type="text/babel" src="data.jsx"></script>
+  <script type="text/babel" src="atoms.jsx"></script>
+
+  <!-- Screens -->
+  <script type="text/babel" src="screen-today.jsx"></script>
+  <script type="text/babel" src="screen-chat.jsx"></script>
+  <script type="text/babel" src="screen-ledger.jsx"></script>
+  <script type="text/babel" src="screen-week.jsx"></script>
+  <script type="text/babel" src="screen-sources.jsx"></script>
+  <script type="text/babel" src="screen-desktop.jsx"></script>
+
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // ─── Phone wrapper ──────────────────────────────────────────────────────
+    function Phone({ children, initialTab = 'today' }) {
+      const [tab, setTab] = useState(initialTab);
+      const Screens = {
+        today:  window.ScrTodayInner,
+        chat:   window.ScrChatInner,
+        ledger: window.ScrLedgerInner,
+        week:   window.ScrWeekInner,
+        src:    window.ScrSourcesInner,
+      };
+      const ActiveScreen = Screens[tab];
+      return (
+        <div className="phone-frame">
+          <div className="phone-screen">
+            <div className="phone-status">
+              <span>9:41</span>
+              <div className="right">
+                <div className="bar b1" /><div className="bar b2" /><div className="bar b3" /><div className="bar b4" />
+                <div className="battery" style={{ marginLeft: 6 }} />
+              </div>
+            </div>
+            <div style={{ height: '100%', overflow: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              <ActiveScreen onTab={setTab} />
+            </div>
+            <TabBar active={tab} onChange={setTab} />
+            <div className="phone-home" />
+          </div>
+        </div>
+      );
+    }
+
+    // Quiet, unobtrusive phone (no chrome — for the smaller boards beside the main one).
+    function PhoneTab({ tab }) {
+      return <Phone initialTab={tab} />;
+    }
+
+    // ─── Desktop wrapper ────────────────────────────────────────────────────
+    function DesktopFrame() {
+      return (
+        <div className="mac-window">
+          <div className="mac-chrome">
+            <div className="light l1" /><div className="light l2" /><div className="light l3" />
+            <div className="title">openclaw.app — body</div>
+          </div>
+          <div style={{ height: 'calc(100% - 28px)' }}>
+            <DesktopOperator />
+          </div>
+        </div>
+      );
+    }
+
+    // ─── App ────────────────────────────────────────────────────────────────
+    function App() {
+      return (
+        <DesignCanvas defaultZoom={0.5}>
+          <DCSection id="hero" title="Daily core" subtitle="The morning briefing, the AI thread, and the day's open loops — what James sees most.">
+            <DCArtboard id="today"   label="Today"          width={410} height={864}><Phone initialTab="today" /></DCArtboard>
+            <DCArtboard id="chat"    label="Copilot · chat" width={410} height={864}><Phone initialTab="chat" /></DCArtboard>
+            <DCArtboard id="ledger"  label="Body Ledger"    width={410} height={864}><Phone initialTab="ledger" /></DCArtboard>
+          </DCSection>
+
+          <DCSection id="depth" title="Insight + trust" subtitle="The week's calibration story and the source-agnostic 'Body OS' surface.">
+            <DCArtboard id="weekly"  label="Weekly review · calibration"  width={410} height={864}><Phone initialTab="week" /></DCArtboard>
+            <DCArtboard id="sources" label="Body OS · sources & coverage" width={410} height={864}><Phone initialTab="src" /></DCArtboard>
+          </DCSection>
+
+          <DCSection id="desktop" title="Operator" subtitle="The same body, presented on a calmer command surface. Three columns: status, the one thing, the conversation.">
+            <DCArtboard id="op" label="Desktop · OpenClaw / Body" width={1300} height={820}><DesktopFrame /></DCArtboard>
+          </DCSection>
+        </DesignCanvas>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
