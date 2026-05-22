@@ -260,7 +260,7 @@ enum DataSource { case oura, iphone, appleWatch, smartScale, photos, manual, cal
 | Skin temp | Oura | — | Historical fallback only; Oura is disabled for now |
 | Workout HR, active HR | Apple Watch | iPhone | Best at exercise |
 | Steps | iPhone / Apple Watch | — | Oura under-counts |
-| Weight | Smart scale | Manual entry | Source of truth for body comp |
+| Weight | Smart scale / Apple Health body mass | Manual entry / OpenClaw prompt | Source of truth for body comp |
 | Active calories | iPhone / Apple Watch (corrected) | — | Always recalibrated by weight trend |
 | Food intake | Meal photos (OpenClaw chat) + Known Foods library | — | More important than tiny wearable diffs |
 | Daily load | Calendar (meeting density) | — | Cognitive load signal |
@@ -295,7 +295,7 @@ Onboarding is **not** designed yet (intentionally out of MVP scope per the user)
 | Text contrast | ≥ 4.5:1 body | Ink `#1e1b16` on paper `#f6f1e8` ≈ 13:1 |
 | Dynamic Type | Scales 100–200% | All `Font` tokens are sized in pt; serif headings can lock |
 | Reduce Motion | Honored | Body Mode Orb freezes; chart redraws cross-fade instead of morph |
-| VoiceOver | One full sentence per metric | "Sleep, 6 hours 12 minutes. High confidence from Oura. Down 1 hour from baseline." |
+| VoiceOver | One full sentence per metric | "Sleep, 6 hours 12 minutes. High confidence from Apple Watch. Down 1 hour from baseline." |
 
 ---
 
@@ -331,7 +331,7 @@ To view the prototypes locally: run any static server (e.g. `python3 -m http.ser
 2. **Day 2** — `MetricTile` + `Sparkline` + `LedgerRow`. All consumed by the same `LedgerEntry` model.
 3. **Day 3** — **Today screen**, fully wired to mocked data. This is the demo.
 4. **Day 4** — **Body Ledger** + day picker + coverage ring.
-5. **Day 5** — HealthKit + Oura ingestion. Replace mocked data.
+5. **Day 5** — HealthKit ingestion. Keep Oura as dormant fallback code only.
 6. **Day 6** — **Copilot chat** + meal photo flow (vision API call).
 7. **Day 7** — **Weekly Review** + calibration chart + recalibration job.
 

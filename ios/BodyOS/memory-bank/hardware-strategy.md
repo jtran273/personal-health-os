@@ -17,7 +17,7 @@ The per-metric source hierarchy that `HealthDataRouter` encodes. Derived from PR
 | Steps | Apple Watch / Garmin | iPhone | Oura is poor at step counting. |
 | Active calories | Apple Watch | Fitbit → Garmin | All wearables are weak here. **Recalibrate against weight trend.** |
 | Skin temperature | Oura | (no good fallback) | Oura is strong; manufacturer-funded evidence noted. |
-| Weight | Smart scale | Manual entry | The calibration layer for everything. |
+| Weight | Smart scale / Apple Health body mass when present | Manual entry / OpenClaw prompt | The calibration layer for everything. |
 | Body composition % | Smart scale | (skip) | Approximate; trend over time matters more than absolute. |
 | Food calories / protein | Meal photo + Known Foods | Manual estimate | Wearable accuracy is irrelevant to food. |
 | Blood work | Manual upload (later) | — | Clinician-reviewed, not in MVP. |
@@ -29,7 +29,7 @@ James returned **Oura** and now owns an **Apple Watch** connected to his Apple a
 So today, the router falls back to:
 - Sleep, HRV, RHR → Apple Watch through Apple Health, then `.estimated`.
 - Steps, active calories → Apple Watch through Apple Health, then iPhone / `.estimated`.
-- Weight → manual entry.
+- Weight → smart-scale/manual/OpenClaw by default; accept Apple Health body-mass samples when present without letting passive data overwrite higher-confidence same-day manual entries.
 - Food → meal photo + known foods.
 
 ## Near-term roadmap

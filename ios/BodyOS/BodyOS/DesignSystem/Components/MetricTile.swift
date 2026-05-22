@@ -7,7 +7,7 @@ public struct MetricTileData: Identifiable, Equatable {
     public let value: String              // "6h 12m", "38 ms", "—"
     public let delta: String?             // "−1h 04m", "+6", "so far", "est. ±220"
     public let trend: [Double?]           // last 7–14 values, nil = gap
-    public let source: String             // "Oura", "iPhone", "photos"
+    public let source: String             // "Apple Watch", "iPhone", "photos"
     public let confidence: Confidence
 
     public init(
@@ -100,11 +100,11 @@ public struct MetricTile: View {
 #Preview("Grid") {
     let tiles: [MetricTileData] = [
         .init(id: "sleep", label: "Sleep", value: "6h 12m", delta: "−1h 04m",
-              trend: [7.1, 7.4, 7.8, 6.6, 7.2, 5.8, 6.2], source: "Oura", confidence: .high),
+              trend: [7.1, 7.4, 7.8, 6.6, 7.2, 5.8, 6.2], source: "Apple Watch", confidence: .high),
         .init(id: "hrv", label: "HRV", value: "38 ms", delta: "−18%",
-              trend: [54, 52, 48, 46, 50, 42, 38], source: "Oura", confidence: .high),
+              trend: [54, 52, 48, 46, 50, 42, 38], source: "Apple Watch", confidence: .high),
         .init(id: "rhr", label: "Resting HR", value: "64 bpm", delta: "+6",
-              trend: [58, 57, 59, 60, 58, 62, 64], source: "Oura", confidence: .high),
+              trend: [58, 57, 59, 60, 58, 62, 64], source: "Apple Watch", confidence: .high),
         .init(id: "kcal", label: "Eaten", value: "1,820", delta: "est. ±220",
               trend: [2200, 2400, 1900, 2600, 2100, 2300, 1820], source: "photos", confidence: .med),
         .init(id: "protein", label: "Protein", value: "92 g", delta: "goal 140",

@@ -63,9 +63,9 @@ Every normalized metric carries confidence:
 
 Routing defaults:
 
-- Sleep and recovery: Apple Watch through Apple Health; dormant Oura fallback if James uses Oura again.
-- Workouts and steps: Apple Watch or HealthKit bridge.
-- Weight: smart scale first, then OpenClaw/manual prompt.
+- Sleep and recovery: Apple Watch through Apple Health during the 14-day trial; dormant Oura fallback only when explicitly re-enabled.
+- Workouts and steps: Apple Watch / Apple Health first, then iPhone HealthKit bridge.
+- Weight: smart scale or OpenClaw/manual prompt by default; accept Apple Health body-mass samples when present.
 - Meals: OpenClaw text/photo ingestion.
 - Calories burned: low-confidence prior only.
 

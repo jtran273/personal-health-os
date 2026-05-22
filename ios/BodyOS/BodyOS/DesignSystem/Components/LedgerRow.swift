@@ -158,7 +158,7 @@ public struct LedgerRow: View {
                 label: "Sleep",
                 value: "6h 12m",
                 subLine: "22:48 → 05:00 · efficiency 89%",
-                source: "Oura",
+                source: "Apple Watch",
                 confidence: .high,
                 story: "Short by 1h 04m vs. your 14-day baseline. Two wake-ups around 2 am."
             ))
@@ -169,7 +169,7 @@ public struct LedgerRow: View {
                 value: "38",
                 unit: "ms",
                 subLine: "14-day baseline 46 ms",
-                source: "Oura",
+                source: "Apple Watch",
                 confidence: .high,
                 story: "Down 18%. Together with the short sleep, this is what flipped today to yellow."
             ))
