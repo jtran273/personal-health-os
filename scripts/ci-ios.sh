@@ -43,7 +43,7 @@ if [[ -z "$DESTINATION" ]]; then
     echo "error: failed to query iOS Simulator destinations. Ensure the runner has full Xcode selected, not only Command Line Tools." >&2
     exit 1
   fi
-  DESTINATION=$(sed -nE 's/.*platform:iOS Simulator.*name:([^,}]+).*/platform=iOS Simulator,name=\1/p' "$destinations_output" | head -n 1)
+  DESTINATION=$(sed -nE '/name:iPhone/ s/.*platform:iOS Simulator.*name:([^,}]+).*/platform=iOS Simulator,name=\1/p' "$destinations_output" | sed -E 's/[[:space:]]+$//' | head -n 1)
   rm -f "$destinations_output"
 fi
 
