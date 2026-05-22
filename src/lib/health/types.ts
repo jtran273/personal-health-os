@@ -9,6 +9,10 @@ export type WearableSource =
 
 export type MetricConfidence = "high" | "medium" | "low" | "unknown";
 
+export type MealEstimateSource = "known_food" | "meal_photo" | "meal_text" | "manual_entry";
+
+export type MetricSource = WearableSource | MealEstimateSource;
+
 export type BodyMode = "green" | "yellow" | "red";
 
 export type HealthMetric =
@@ -35,7 +39,7 @@ export interface RawHealthEvent<TPayload = unknown> {
 
 export interface MetricValue<TValue> {
   value: TValue;
-  source: WearableSource;
+  source: MetricSource;
   confidence: MetricConfidence;
   notes?: string;
 }
@@ -44,6 +48,7 @@ export interface MealLog {
   id: string;
   loggedAt: string;
   source: "openclaw" | "manual";
+  entrySource?: "known_food" | "meal_photo" | "meal_text" | "manual_entry" | "unknown";
   text?: string;
   photoUrl?: string;
   knownFoods?: KnownFood[];
@@ -81,6 +86,7 @@ export interface NormalizedDailyLedger {
   steps?: MetricValue<number>;
   activeEnergyCalories?: MetricValue<number>;
   meals: MealLog[];
+  estimatedDeficitCalories?: MetricValue<number>;
   calendarPressure?: CalendarPressure;
   rawEventIds: string[];
   generatedAt: string;
