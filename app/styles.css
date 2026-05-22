@@ -97,10 +97,50 @@ li {
   line-height: 1.55;
 }
 
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--clay);
+  outline-offset: 3px;
+}
+
 .lede {
   color: var(--ink-2);
   font-size: 17px;
   max-width: 680px;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.button {
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--hair-strong);
+  border-radius: 999px;
+  color: var(--ink);
+  display: inline-flex;
+  font-size: 13px;
+  font-weight: 800;
+  justify-content: center;
+  letter-spacing: 0.04em;
+  min-height: 42px;
+  padding: 0 18px;
+  text-transform: uppercase;
+}
+
+.button--primary {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--surface-2);
 }
 
 .panel,
@@ -177,6 +217,16 @@ li {
   background: var(--surface-2);
   border: 1px solid var(--hair);
   border-radius: 8px;
+  transition: border-color 160ms ease, transform 160ms ease;
+}
+
+.metrics-strip div:hover {
+  border-color: var(--hair-strong);
+  transform: translateY(-1px);
+}
+
+.metrics-strip a {
+  display: block;
   padding: 14px;
 }
 
@@ -201,6 +251,11 @@ dd {
 
 .panel {
   padding: 22px;
+}
+
+.today-panel,
+.why-panel {
+  grid-column: span 3;
 }
 
 .coverage-panel,
@@ -281,6 +336,62 @@ dd {
 
 .coverage-mark--planned {
   background: var(--faint);
+}
+
+.action-list,
+.ledger-row-list,
+.capture-stack {
+  display: grid;
+  gap: 14px;
+}
+
+.action-list a,
+.ledger-row-list a,
+.ledger-placeholder {
+  background: var(--paper-deep);
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+}
+
+.action-list a:hover,
+.ledger-row-list a:hover,
+.ledger-placeholder:target {
+  border-color: var(--clay);
+}
+
+.action-list strong,
+.ledger-row-list strong,
+.ledger-placeholder strong {
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.action-list span,
+.ledger-row-list span,
+.ledger-placeholder span {
+  color: var(--clay);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ledger-row-list em,
+.ledger-placeholder em,
+.safe-copy {
+  color: var(--muted);
+  font-size: 13px;
+  font-style: normal;
+  line-height: 1.45;
+}
+
+.safe-copy {
+  border-top: 1px solid var(--hair);
+  margin: 18px 0 0;
+  padding-top: 14px;
 }
 
 .capture-stack {
@@ -375,6 +486,8 @@ dd {
     grid-template-columns: 1fr;
   }
 
+  .today-panel,
+  .why-panel,
   .coverage-panel,
   .integration-panel,
   .capture-panel,

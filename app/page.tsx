@@ -1,5 +1,11 @@
+import { buildSampleOpenClawLedger } from "@/lib/openclaw/health";
+import { buildTodayInteractionModel } from "@/lib/openclaw/health/interactions";
+
+const sampleLedger = buildSampleOpenClawLedger(new Date("2026-05-21T15:30:00.000Z"));
+const today = buildTodayInteractionModel(sampleLedger);
+
 const coverageItems = [
-  { label: "Sleep + recovery", source: "Apple Watch", status: "flowing" },
+  { label: "Sleep + recovery", source: "Apple Watch / Oura-shaped ledger", status: "flowing" },
   { label: "Steps + active energy", source: "Apple Health", status: "flowing" },
   { label: "Weight trend", source: "Manual today, scale later", status: "needs scale" },
   { label: "Meals + protein", source: "OpenClaw text/photo", status: "manual fallback" },
@@ -10,7 +16,7 @@ const endpoints = [
   {
     method: "GET",
     path: "/api/health/daily-ledger",
-    note: "Sample normalized ledger and body-mode reasons."
+    note: "Normalized ledger, body-mode reasons, and safe Body Ledger context."
   },
   {
     method: "GET/POST",
@@ -40,35 +46,89 @@ export default function Home() {
           <h1 id="hero-heading">Today runs on body mode, coverage, and the next missing signal.</h1>
           <p className="lede">
             A simple operator surface for James and future agents: see what the body mode says,
-            which sources are flowing, what OpenClaw can capture next, and what still needs wiring.
+            why it says it, and which safe capture path should happen next.
           </p>
+          <div className="hero-actions" aria-label="Today actions">
+            <a className="button button--primary" href={today.primaryAction.href}>{today.primaryAction.label}</a>
+            <a className="button" href={today.secondaryAction.href}>{today.secondaryAction.label}</a>
+          </div>
         </div>
 
         <aside className="mode-card" aria-labelledby="mode-heading">
           <div className="mode-card__topline">
             <span className="status-dot" aria-hidden="true" />
-            <span>Today</span>
+            <span>{today.date}</span>
           </div>
-          <h2 id="mode-heading">Yellow mode</h2>
-          <p>Preserve the routine. Walk at lunch, keep protein visible, and avoid intensity until recovery fills in.</p>
+          <h2 id="mode-heading">{today.mode[0].toUpperCase() + today.mode.slice(1)} mode</h2>
+          <p>{today.planCopy}</p>
           <dl className="metrics-strip">
-            <div>
-              <dt>Sleep</dt>
-              <dd>7.1h</dd>
-            </div>
-            <div>
-              <dt>Readiness</dt>
-              <dd>72</dd>
-            </div>
-            <div>
-              <dt>Coverage</dt>
-              <dd>68%</dd>
-            </div>
+            {today.metricLinks.slice(0, 3).map((metric) => (
+              <div key={metric.metric}>
+                <a href={metric.href} aria-label={metric.copy}>
+                  <dt>{metric.label}</dt>
+                  <dd>{metric.value}</dd>
+                </a>
+              </div>
+            ))}
           </dl>
         </aside>
       </section>
 
       <section className="dashboard-grid" aria-label="Health OS control surface">
+        <article className="panel today-panel" id="today-plan">
+          <div className="section-heading">
+            <p className="eyebrow">Today plan</p>
+            <h2>{today.planHeadline}</h2>
+          </div>
+          <p>{today.planCopy}</p>
+          <div className="action-list" aria-label="Missing-signal prompts">
+            {today.missingSignals.map((prompt) => (
+              <a key={prompt.signal} href={prompt.href}>
+                <strong>{prompt.label}</strong>
+                <span>{prompt.copy}</span>
+              </a>
+            ))}
+          </div>
+          <p className="safe-copy">{today.dataStateCopy}</p>
+        </article>
+
+        <article className="panel why-panel" id="why-this-mode">
+          <div className="section-heading">
+            <p className="eyebrow">Why this</p>
+            <h2>Recommendation from ledger inputs</h2>
+          </div>
+          <p>{today.explanation}</p>
+          <div className="ledger-row-list" aria-label="Body Ledger metric links">
+            {today.metricLinks.map((metric) => (
+              <a key={metric.metric} id={`body-ledger-${metric.metric}`} href={metric.href}>
+                <span>{metric.label}</span>
+                <strong>{metric.value}</strong>
+                <em>{metric.source}</em>
+              </a>
+            ))}
+            <div id="body-ledger-weight" className="ledger-placeholder">
+              <span>Weight</span>
+              <strong>Missing</strong>
+              <em>Manual Body Ledger row or smart scale later</em>
+            </div>
+            <div id="body-ledger-hrv" className="ledger-placeholder">
+              <span>HRV</span>
+              <strong>Missing</strong>
+              <em>Check wearable permissions after sleep exists</em>
+            </div>
+            <div id="body-ledger-resting_heart_rate" className="ledger-placeholder">
+              <span>Resting HR</span>
+              <strong>Missing</strong>
+              <em>Check wearable permissions after sleep exists</em>
+            </div>
+            <div id="body-ledger-coverage" className="ledger-placeholder">
+              <span>Coverage</span>
+              <strong>{today.metricLinks.find((metric) => metric.label === "Coverage")?.value}</strong>
+              <em>Available normalized rows only</em>
+            </div>
+          </div>
+        </article>
+
         <article className="panel coverage-panel">
           <div className="section-heading">
             <p className="eyebrow">Source coverage</p>
