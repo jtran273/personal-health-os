@@ -27,8 +27,41 @@ export async function fetchOuraDailyActivity(
   return fetchOuraCollection("daily_activity", options);
 }
 
+export async function fetchOuraDailyResilience(
+  options: OuraFetchOptions
+): Promise<RawHealthEvent[]> {
+  return fetchOuraCollection("daily_resilience", options);
+}
+
+export async function fetchOuraDailyCardiovascularAge(
+  options: OuraFetchOptions
+): Promise<RawHealthEvent[]> {
+  return fetchOuraCollection("daily_cardiovascular_age", options);
+}
+
+export async function fetchOuraDailySpo2(
+  options: OuraFetchOptions
+): Promise<RawHealthEvent[]> {
+  return fetchOuraCollection("daily_spo2", options);
+}
+
+export async function fetchOuraDailyStress(
+  options: OuraFetchOptions
+): Promise<RawHealthEvent[]> {
+  return fetchOuraCollection("daily_stress", options);
+}
+
+type OuraCollection =
+  | "daily_sleep"
+  | "daily_readiness"
+  | "daily_activity"
+  | "daily_resilience"
+  | "daily_cardiovascular_age"
+  | "daily_spo2"
+  | "daily_stress";
+
 async function fetchOuraCollection(
-  collection: "daily_sleep" | "daily_readiness" | "daily_activity",
+  collection: OuraCollection,
   options: OuraFetchOptions
 ): Promise<RawHealthEvent[]> {
   const token = options.token ?? process.env.OURA_PAT;

@@ -1,5 +1,5 @@
 import { classifyBodyMode } from "./body-mode";
-import type { MealLog, MetricSource, MetricValue, NormalizedDailyLedger, RawHealthEvent } from "./types";
+import type { BodyComposition, MealLog, MetricSource, MetricValue, NormalizedDailyLedger, RawHealthEvent, ResilienceLevel } from "./types";
 
 export interface BuildDailyLedgerOptions {
   date: string;
@@ -25,6 +25,8 @@ export function buildNormalizedDailyLedger(options: BuildDailyLedgerOptions): Bu
   };
 
   applyOuraEvents(ledger, dayEvents);
+  applyOuraRing5Events(ledger, dayEvents);
+  applySmartScaleEvents(ledger, dayEvents, allWeightEvents);
   applyWeight(ledger, dayEvents, allWeightEvents);
   applyEstimatedDeficit(ledger);
 
@@ -33,7 +35,8 @@ export function buildNormalizedDailyLedger(options: BuildDailyLedgerOptions): Bu
     sleepHours: ledger.sleepHours,
     temperatureDeviationC: ledger.temperatureDeviationC,
     stressScore: ledger.stressScore,
-    calendarPressure: ledger.calendarPressure
+    calendarPressure: ledger.calendarPressure,
+    resilienceScore: ledger.resilienceScore
   });
   ledger.bodyMode = bodyMode.mode;
 
@@ -84,6 +87,78 @@ function applyOuraEvents(ledger: NormalizedDailyLedger, events: RawHealthEvent[]
       }
     }
   }
+}
+
+function applyOuraRing5Events(ledger: NormalizedDailyLedger, events: RawHealthEvent[]): void {
+  for (const event of events.filter((e) => e.source === "oura")) {
+    if (event.type === "daily_resilience") {
+      const score = readNumber(event.payload, "score");
+      const levelStr = readString(event.payload, "level");
+      if (score !== undefined) ledger.resilienceScore = metric(score, "oura", "high");
+      if (levelStr && isResilienceLevel(levelStr)) {
+        ledger.resilienceLevel = metric(levelStr, "oura", "high");
+      }
+    }
+
+    if (event.type === "daily_cardiovascular_age") {
+      const age = readNumber(event.payload, "age");
+      if (age !== undefined) ledger.cardiovascularAge = metric(age, "oura", "medium");
+    }
+
+    if (event.type === "daily_spo2") {
+      const spo2 = firstNumber(event.payload, ["spo2_percentage.average", "spo2_percentage"]);
+      if (spo2 !== undefined) ledger.spo2Percentage = metric(spo2, "oura", "medium");
+    }
+
+    if (event.type === "daily_stress") {
+      const stressHigh = readNumber(event.payload, "stress_high");
+      if (stressHigh !== undefined && !ledger.stressScore) {
+        ledger.stressScore = metric(stressHigh, "oura", "medium");
+      }
+    }
+  }
+}
+
+function applySmartScaleEvents(
+  ledger: NormalizedDailyLedger,
+  dayEvents: RawHealthEvent[],
+  allWeightEvents: RawHealthEvent[]
+): void {
+  const scaleEvents = dayEvents.filter(
+    (e) => (e.source === "withings" || e.source === "renpho") && e.type === "body_composition"
+  );
+
+  if (scaleEvents.length === 0) return;
+
+  const latest = scaleEvents.sort((a, b) => b.observedAt.localeCompare(a.observedAt)).at(0);
+  if (!latest) return;
+
+  const bodyComp: BodyComposition = {};
+  const bodyFat = readNumber(latest.payload, "bodyFatPercent");
+  const muscle = readNumber(latest.payload, "muscleMassKg");
+  const bone = readNumber(latest.payload, "boneMassKg");
+  const water = readNumber(latest.payload, "waterPercent");
+  const visceral = readNumber(latest.payload, "visceralFatIndex");
+
+  if (bodyFat !== undefined) bodyComp.bodyFatPercentage = metric(bodyFat, latest.source, "high");
+  if (muscle !== undefined) bodyComp.muscleMassKg = metric(muscle, latest.source, "high");
+  if (bone !== undefined) bodyComp.boneMassKg = metric(bone, latest.source, "high");
+  if (water !== undefined) bodyComp.waterPercentage = metric(water, latest.source, "high");
+  if (visceral !== undefined) bodyComp.visceralFatIndex = metric(visceral, latest.source, "medium");
+
+  if (Object.keys(bodyComp).length > 0) ledger.bodyComposition = bodyComp;
+
+  void allWeightEvents;
+}
+
+function isResilienceLevel(value: string): value is ResilienceLevel {
+  return (
+    value === "excellent" ||
+    value === "good" ||
+    value === "adequate" ||
+    value === "pay_attention" ||
+    value === "poor"
+  );
 }
 
 function applyWeight(
@@ -206,6 +281,8 @@ function readMetricSource(payload: unknown, path: string): MetricSource | undefi
     value === "apple_watch" ||
     value === "garmin" ||
     value === "smart_scale" ||
+    value === "withings" ||
+    value === "renpho" ||
     value === "openclaw" ||
     value === "manual" ||
     value === "known_food" ||

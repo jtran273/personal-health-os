@@ -68,7 +68,7 @@ const routes: Record<HealthMetric, SourceRoute> = {
   weight: {
     metric: "weight",
     preferredSource: "smart_scale",
-    fallbackSources: ["openclaw", "manual"],
+    fallbackSources: ["withings", "renpho", "openclaw", "manual"],
     defaultConfidence: "high",
     rationale: "Weight trend is the anchor for calorie recalibration."
   },
@@ -78,6 +78,34 @@ const routes: Record<HealthMetric, SourceRoute> = {
     fallbackSources: ["manual"],
     defaultConfidence: "medium",
     rationale: "OpenClaw is the low-friction meal capture interface."
+  },
+  resilience: {
+    metric: "resilience",
+    preferredSource: "oura",
+    fallbackSources: ["manual"],
+    defaultConfidence: "high",
+    rationale: "Oura Ring 5 daily resilience is a proprietary composite score."
+  },
+  spo2: {
+    metric: "spo2",
+    preferredSource: "oura",
+    fallbackSources: ["apple_health", "apple_watch", "manual"],
+    defaultConfidence: "medium",
+    rationale: "SpO2 from wearables is a screening signal, not a clinical measurement."
+  },
+  cardiovascular_age: {
+    metric: "cardiovascular_age",
+    preferredSource: "oura",
+    fallbackSources: ["manual"],
+    defaultConfidence: "medium",
+    rationale: "Oura Ring 5 cardiovascular age is a model-derived estimate."
+  },
+  body_fat_percentage: {
+    metric: "body_fat_percentage",
+    preferredSource: "withings",
+    fallbackSources: ["renpho", "smart_scale", "manual"],
+    defaultConfidence: "medium",
+    rationale: "Smart scale BIA measurements are useful for trends, not absolute precision."
   }
 };
 

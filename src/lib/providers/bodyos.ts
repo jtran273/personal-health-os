@@ -324,6 +324,8 @@ function isWearableSource(value: unknown): value is WearableSource {
     "apple_watch",
     "garmin",
     "smart_scale",
+    "withings",
+    "renpho",
     "openclaw",
     "manual",
   ].includes(value);

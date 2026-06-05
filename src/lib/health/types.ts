@@ -4,6 +4,8 @@ export type WearableSource =
   | "apple_watch"
   | "garmin"
   | "smart_scale"
+  | "withings"
+  | "renpho"
   | "openclaw"
   | "manual";
 
@@ -25,7 +27,21 @@ export type HealthMetric =
   | "workout"
   | "active_energy"
   | "weight"
-  | "meal";
+  | "meal"
+  | "resilience"
+  | "spo2"
+  | "cardiovascular_age"
+  | "body_fat_percentage";
+
+export type ResilienceLevel = "excellent" | "good" | "adequate" | "pay_attention" | "poor";
+
+export interface BodyComposition {
+  bodyFatPercentage?: MetricValue<number>;
+  muscleMassKg?: MetricValue<number>;
+  boneMassKg?: MetricValue<number>;
+  waterPercentage?: MetricValue<number>;
+  visceralFatIndex?: MetricValue<number>;
+}
 
 export interface RawHealthEvent<TPayload = unknown> {
   id: string;
@@ -88,6 +104,11 @@ export interface NormalizedDailyLedger {
   meals: MealLog[];
   estimatedDeficitCalories?: MetricValue<number>;
   calendarPressure?: CalendarPressure;
+  bodyComposition?: BodyComposition;
+  resilienceScore?: MetricValue<number>;
+  resilienceLevel?: MetricValue<ResilienceLevel>;
+  spo2Percentage?: MetricValue<number>;
+  cardiovascularAge?: MetricValue<number>;
   rawEventIds: string[];
   generatedAt: string;
 }

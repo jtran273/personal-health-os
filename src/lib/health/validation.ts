@@ -6,6 +6,8 @@ const sources = new Set<WearableSource>([
   "apple_watch",
   "garmin",
   "smart_scale",
+  "withings",
+  "renpho",
   "openclaw",
   "manual"
 ]);

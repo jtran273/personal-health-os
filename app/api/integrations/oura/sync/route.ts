@@ -1,8 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { assertValidDate, buildNormalizedDailyLedger, isValidationError } from "@/lib/health";
 import type { RawHealthEventStore } from "@/lib/health/ledger";
+import type { RawHealthEvent } from "@/lib/health";
 import { getDefaultRawHealthEventStore } from "@/lib/health/server-store";
-import { fetchOuraDailyActivity, fetchOuraDailyReadiness, fetchOuraDailySleep } from "@/lib/providers/oura";
+import {
+  fetchOuraDailyActivity,
+  fetchOuraDailyCardiovascularAge,
+  fetchOuraDailyReadiness,
+  fetchOuraDailyResilience,
+  fetchOuraDailySleep,
+  fetchOuraDailySpo2,
+  fetchOuraDailyStress
+} from "@/lib/providers/oura";
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,6 +22,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
     throw error;
+  }
+}
+
+async function tryFetch(label: string, fn: () => Promise<RawHealthEvent[]>): Promise<RawHealthEvent[]> {
+  try {
+    return await fn();
+  } catch (err) {
+    console.warn(`Oura ${label} fetch skipped:`, err instanceof Error ? err.message : err);
+    return [];
   }
 }
 
@@ -29,13 +47,34 @@ export async function syncOuraRequest(store: RawHealthEventStore, body: unknown)
     };
   }
 
-  const [sleepEvents, readinessEvents, activityEvents] = await Promise.all([
-    fetchOuraDailySleep({ startDate, endDate }),
-    fetchOuraDailyReadiness({ startDate, endDate }),
-    fetchOuraDailyActivity({ startDate, endDate })
+  const opts = { startDate, endDate };
+  const [
+    sleepEvents,
+    readinessEvents,
+    activityEvents,
+    resilienceEvents,
+    cardioAgeEvents,
+    spo2Events,
+    stressEvents
+  ] = await Promise.all([
+    fetchOuraDailySleep(opts),
+    fetchOuraDailyReadiness(opts),
+    fetchOuraDailyActivity(opts),
+    tryFetch("daily_resilience", () => fetchOuraDailyResilience(opts)),
+    tryFetch("daily_cardiovascular_age", () => fetchOuraDailyCardiovascularAge(opts)),
+    tryFetch("daily_spo2", () => fetchOuraDailySpo2(opts)),
+    tryFetch("daily_stress", () => fetchOuraDailyStress(opts))
   ]);
 
-  const events = [...sleepEvents, ...readinessEvents, ...activityEvents];
+  const events = [
+    ...sleepEvents,
+    ...readinessEvents,
+    ...activityEvents,
+    ...resilienceEvents,
+    ...cardioAgeEvents,
+    ...spo2Events,
+    ...stressEvents
+  ];
   const write = await store.insertMany(events);
   const normalized = buildNormalizedDailyLedger({
     date: endDate,

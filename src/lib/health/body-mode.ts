@@ -6,6 +6,7 @@ export interface BodyModeInput {
   temperatureDeviationC?: MetricValue<number>;
   stressScore?: MetricValue<number>;
   calendarPressure?: CalendarPressure;
+  resilienceScore?: MetricValue<number>;
 }
 
 export interface BodyModeResult {
@@ -49,6 +50,13 @@ export function classifyBodyMode(input: BodyModeInput): BodyModeResult {
   if (isHighPressureDay(input.calendarPressure)) {
     riskScore += 1;
     reasons.push("high calendar pressure");
+  }
+
+  if (input.resilienceScore && input.resilienceScore.value <= 40) {
+    riskScore += 1;
+    reasons.push("low resilience");
+  } else if (input.resilienceScore && input.resilienceScore.value >= 85) {
+    riskScore = Math.max(0, riskScore - 1);
   }
 
   if (riskScore >= 4) return { mode: "red", reasons };

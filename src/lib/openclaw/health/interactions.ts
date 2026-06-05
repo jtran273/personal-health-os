@@ -219,7 +219,11 @@ function labelForMetric(metric: HealthMetric | "readiness"): string {
     workout: "Workout",
     active_energy: "Active energy",
     weight: "Weight",
-    meal: "Meals"
+    meal: "Meals",
+    resilience: "Resilience",
+    spo2: "SpO2",
+    cardiovascular_age: "Cardiovascular age",
+    body_fat_percentage: "Body fat"
   };
   return labels[metric];
 }

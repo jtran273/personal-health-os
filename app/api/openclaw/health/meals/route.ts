@@ -4,6 +4,8 @@ import {
   validateAndNormalizeMealIngestion,
   type OpenClawMealIngestionInput
 } from "@/lib/openclaw/health";
+import { getDefaultRawHealthEventStore } from "@/lib/health/server-store";
+import type { RawHealthEvent } from "@/lib/health";
 import { readJsonBody, requireOpenClawHealthAuth } from "../_shared";
 
 export async function POST(request: NextRequest) {
@@ -23,6 +25,19 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   }
+
+  const meal = result.value!.meal;
+  const now = result.value!.acceptedAt;
+  const event: RawHealthEvent = {
+    id: meal.id,
+    source: "openclaw",
+    type: "openclaw_meal",
+    observedAt: meal.loggedAt,
+    receivedAt: now,
+    externalId: meal.id,
+    payload: meal
+  };
+  await getDefaultRawHealthEventStore().insert(event);
 
   return NextResponse.json(
     {

@@ -4,6 +4,7 @@ import {
   validateAndNormalizeWeightIngestion,
   type OpenClawWeightIngestionInput
 } from "@/lib/openclaw/health";
+import { getDefaultRawHealthEventStore } from "@/lib/health/server-store";
 import { readJsonBody, requireOpenClawHealthAuth } from "../_shared";
 
 export async function POST(request: NextRequest) {
@@ -23,6 +24,8 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   }
+
+  await getDefaultRawHealthEventStore().insert(result.value!.event);
 
   return NextResponse.json(
     {

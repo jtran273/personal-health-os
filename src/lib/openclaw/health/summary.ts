@@ -14,7 +14,7 @@ export interface OpenClawDailySummary {
     weight: string;
   };
   missingSignals: string[];
-  dataState: "sample_until_persistence";
+  dataState: "live" | "sample_until_persistence";
   safety: typeof openClawHealthSafetyMetadata;
   generatedAt: string;
 }
@@ -28,7 +28,7 @@ export interface OpenClawTodayPlan {
   movement: string;
   recovery: string;
   checkIns: string[];
-  dataState: "sample_until_persistence";
+  dataState: "live" | "sample_until_persistence";
   safety: typeof openClawHealthSafetyMetadata;
   generatedAt: string;
 }
@@ -57,6 +57,7 @@ export function buildOpenClawDailySummary(
 ): OpenClawDailySummary {
   const bodyMode = classifyBodyMode(ledger);
   const generatedAt = now.toISOString();
+  const hasRealData = ledger.rawEventIds.length > 0;
 
   return {
     kind: "openclaw.health.daily_summary",
@@ -71,7 +72,7 @@ export function buildOpenClawDailySummary(
       weight: ledger.weightKg ? `${ledger.weightKg.value.toFixed(1)} kg` : "weight missing"
     },
     missingSignals: collectMissingSignals(ledger),
-    dataState: "sample_until_persistence",
+    dataState: hasRealData ? "live" : "sample_until_persistence",
     safety: openClawHealthSafetyMetadata,
     generatedAt
   };
@@ -83,6 +84,7 @@ export function buildOpenClawTodayPlan(
 ): OpenClawTodayPlan {
   const bodyMode = classifyBodyMode(ledger);
   const generatedAt = now.toISOString();
+  const hasRealData = ledger.rawEventIds.length > 0;
 
   return {
     kind: "openclaw.health.today_plan",
@@ -93,7 +95,7 @@ export function buildOpenClawTodayPlan(
     movement: chooseMovement(bodyMode.mode),
     recovery: chooseRecovery(bodyMode.mode),
     checkIns: chooseCheckIns(ledger),
-    dataState: "sample_until_persistence",
+    dataState: hasRealData ? "live" : "sample_until_persistence",
     safety: openClawHealthSafetyMetadata,
     generatedAt
   };

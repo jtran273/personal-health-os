@@ -3,7 +3,10 @@ import { buildOpenClawDailySummary } from "@/lib/openclaw/health";
 import {
   bodyOSAssistantBridgeSafetyMetadata,
   validateBodyOSAssistantHealthExport,
+  type BodyOSAssistantDailySummary,
 } from "@/lib/providers/bodyos";
+import type { RawHealthEvent } from "@/lib/health";
+import { getDefaultRawHealthEventStore } from "@/lib/health/server-store";
 import { readJsonBody, requireOpenClawHealthAuth } from "../_shared";
 
 export async function POST(request: NextRequest) {
@@ -22,6 +25,21 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   }
+
+  const receivedAt = new Date().toISOString();
+  const events: RawHealthEvent[] = (result.payload?.dailySummaries ?? []).map(
+    (summary: BodyOSAssistantDailySummary): RawHealthEvent => ({
+      id: "",
+      source: "openclaw",
+      type: "bodyos_daily_summary",
+      observedAt: `${summary.date}T00:00:00.000Z`,
+      receivedAt,
+      externalId: `bodyos:daily:${summary.date}`,
+      payload: summary
+    })
+  );
+
+  await getDefaultRawHealthEventStore().insertMany(events);
 
   return NextResponse.json(
     {
