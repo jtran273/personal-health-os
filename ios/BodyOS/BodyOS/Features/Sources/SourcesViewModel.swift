@@ -175,6 +175,11 @@ final class SourcesViewModel {
             return
         }
         healthKitStatus = hasRecentHealthKitData ? .connected : .connectedNoData
+        if healthKitStatus == .connectedNoData {
+            healthKitMessage = "Permission set; no recent Apple Health samples"
+        } else if healthKitMessage == "Permission set; no recent Apple Health samples" || healthKitMessage == "Syncing recent data" {
+            healthKitMessage = "Synced just now"
+        }
     }
 
     private var recentHealthKitEntries: [DailyLedgerEntry] {
