@@ -52,14 +52,13 @@ test("oura ring5 collections produce correct event types from mock data", async 
   const { fetchOuraDailyResilience } = await import("@/lib/providers/oura");
 
   const mockFetch = globalThis.fetch;
-  globalThis.fetch = (async (_url: unknown, _opts: unknown) => {
-    return {
-      ok: true,
-      json: async () => ({
-        data: [{ id: "abc123", day: "2024-06-01", score: 78, level: "good" }]
-      })
-    };
-  }) as typeof fetch;
+  globalThis.fetch = async (input, init) => {
+    void input;
+    void init;
+    return Response.json({
+      data: [{ id: "abc123", day: "2024-06-01", score: 78, level: "good" }]
+    });
+  };
 
   try {
     const events = await fetchOuraDailyResilience({

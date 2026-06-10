@@ -15,12 +15,16 @@ handoff in `ios/BodyOS/HANDOFF.md`.
    invent unmatched photo/text macros until an estimator is wired in.
 4. **Expose daily summary.** Add an endpoint that returns body mode, missing signals, and one
    concise action for OpenClaw to send.
+5. **Choose nutrition tracking path.** Use `docs/NUTRITION_TRACKING_STRATEGY.md` as the product
+   guardrail: fast capture, confidence-banded estimates, correction, known-food reuse, and
+   smart-scale recalibration instead of treating photo-only calories as exact.
 
 ## Next
 
 1. **Meal photo queue.** Accept a photo URL or uploaded asset, enqueue macro estimation, and write
    low/medium-confidence estimates back to the ledger. Do not persist raw images outside local/dev
-   gitignored storage; store only bounded URLs or estimator outputs in raw events.
+   gitignored storage; store only bounded URLs or estimator outputs in raw events. Ground estimates
+   with text/serving cues and known foods before spending model calls.
 2. **Weight trend calibration.** Use 7-28 day weight trend plus logged intake to adjust calorie
    burn assumptions. Never treat wearable calorie burn as exact.
 3. **HealthKit source attribution.** Distinguish Apple Watch, iPhone, and future smart-scale samples

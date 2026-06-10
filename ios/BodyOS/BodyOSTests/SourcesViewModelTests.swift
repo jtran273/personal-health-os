@@ -7,7 +7,7 @@ final class SourcesViewModelTests: XCTestCase {
         super.tearDown()
     }
 
-    func testConnectHealthKitAuthorizesSyncsAndMarksConnected() async throws {
+    func testConnectHealthKitAuthorizesButWaitsForReadableAppleWatchSamples() async throws {
         let day = try XCTUnwrap(Calendar.current.date(from: DateComponents(year: 2026, month: 5, day: 21)))
         let syncedEntry = DailyLedgerEntry(
             date: day,
@@ -24,11 +24,11 @@ final class SourcesViewModelTests: XCTestCase {
 
         XCTAssertTrue(authorizer.didRequestAuthorization)
         XCTAssertEqual(ingestor.requestedDays, 7)
-        XCTAssertEqual(viewModel.healthKitStatus, .connected)
-        XCTAssertEqual(viewModel.healthKitMessage, "Synced just now")
+        XCTAssertEqual(viewModel.healthKitStatus, .connectedNoData)
+        XCTAssertEqual(viewModel.healthKitMessage, "Permission set; no recent Apple Health samples")
         XCTAssertTrue(UserDefaults.standard.bool(forKey: "source.healthKit"))
-        XCTAssertEqual(viewModel.weeklyCoverage, 20)
-        XCTAssertEqual(viewModel.coverageSentence, "Recent ledger rows are present. Check Today and Body for source, freshness, and confidence per metric.")
+        XCTAssertEqual(viewModel.weeklyCoverage, 0)
+        XCTAssertEqual(viewModel.coverageSentence, "Apple Health permission is set; waiting for readable Apple Watch samples.")
     }
 
     func testConnectHealthKitFailureKeepsSourceAvailable() async {
