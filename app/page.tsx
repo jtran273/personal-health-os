@@ -1,52 +1,147 @@
-import { buildSampleOpenClawLedger } from "@/lib/openclaw/health";
+import { buildNormalizedDailyLedger, type NormalizedDailyLedger } from "@/lib/health";
+import { getDefaultRawHealthEventStore } from "@/lib/health/server-store";
 import { buildTodayInteractionModel } from "@/lib/openclaw/health/interactions";
 
-const sampleLedger = buildSampleOpenClawLedger(new Date("2026-05-21T15:30:00.000Z"));
-const today = buildTodayInteractionModel(sampleLedger);
+export const dynamic = "force-dynamic";
 
-const coverageItems = [
-  { label: "Sleep + recovery", source: "Apple Watch / Apple Health", status: "flowing" },
-  { label: "Steps + active energy", source: "Apple Health", status: "flowing" },
-  { label: "Weight trend", source: "Manual today, scale later", status: "needs scale" },
-  { label: "Meals + protein", source: "OpenClaw text/photo", status: "manual fallback" },
-  { label: "Calendar pressure", source: "Future calendar bridge", status: "planned" }
-];
+type CoverageStatus = "flowing" | "manual fallback" | "needs scale" | "planned";
 
-const endpoints = [
-  {
-    method: "GET",
-    path: "/api/health/daily-ledger",
-    note: "Normalized ledger, body-mode reasons, and safe Body Ledger context."
-  },
-  {
-    method: "GET/POST",
-    path: "/api/health/meals",
-    note: "OpenClaw meal capture contract stub."
-  },
-  {
-    method: "POST",
-    path: "/api/integrations/oura/sync",
-    note: "Dormant Oura sync path; fallback only, not auto-ingested because a token exists."
-  }
-];
+interface CoverageItem {
+  label: string;
+  source: string;
+  status: CoverageStatus;
+}
 
-const readiness = [
-  "HealthKit source attribution for Apple Watch vs iPhone vs future scale",
-  "Smart-scale import path using the same weight ledger shape",
-  "OpenClaw ingestion token validation before persistence",
-  "Weekly calorie recalibration once weight and meal rows are durable"
-];
+function statusClass(status: CoverageStatus) {
+  return status.replaceAll(" ", "-");
+}
 
-export default function Home() {
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function sourceCoverage(ledger: NormalizedDailyLedger): CoverageItem[] {
+  return [
+    {
+      label: "Sleep + recovery",
+      source: ledger.sleepHours || ledger.readinessScore ? "Oura / Apple Health ledger row" : "Waiting on Oura or Apple Health",
+      status: ledger.sleepHours || ledger.readinessScore ? "flowing" : "planned"
+    },
+    {
+      label: "Steps + active energy",
+      source: ledger.steps || ledger.activeEnergyCalories ? "Wearable activity ledger row" : "Waiting on wearable sync",
+      status: ledger.steps || ledger.activeEnergyCalories ? "flowing" : "planned"
+    },
+    {
+      label: "Weight trend",
+      source: ledger.weightKg ? `${ledger.weightKg.source} ledger row` : "Manual now, Withings tonight",
+      status: ledger.weightKg ? "flowing" : "needs scale"
+    },
+    {
+      label: "Meals + protein",
+      source: ledger.meals.length ? "OpenClaw meal ledger rows" : "OpenClaw text/photo capture",
+      status: ledger.meals.length ? "flowing" : "manual fallback"
+    },
+    {
+      label: "Calorie calibration",
+      source: ledger.weightTrendKgPerWeek && ledger.estimatedDeficitCalories ? "Weight trend + logged intake" : "Needs scale trend and meal consistency",
+      status: ledger.weightTrendKgPerWeek && ledger.estimatedDeficitCalories ? "flowing" : "planned"
+    }
+  ];
+}
+
+function activeEndpoints() {
+  return [
+    {
+      method: "GET",
+      path: "/api/openclaw/health/daily-summary",
+      note: "Assistant-safe body mode, missing signals, and source coverage."
+    },
+    {
+      method: "GET",
+      path: "/api/openclaw/health/today-plan",
+      note: "Smallest useful check-ins for OpenClaw to ask over iMessage."
+    },
+    {
+      method: "POST",
+      path: "/api/openclaw/health/meals",
+      note: "Trusted meal text/photo-reference ingestion with bounded validation."
+    },
+    {
+      method: "POST",
+      path: "/api/openclaw/health/weight",
+      note: "Manual weight capture now; Withings can feed the same ledger shape later."
+    }
+  ];
+}
+
+function readiness(ledger: NormalizedDailyLedger) {
+  return [
+    ledger.rawEventIds.length
+      ? "Live ledger rows are present; no sample health values are shown."
+      : "No live rows yet; the cockpit stays empty instead of inventing Oura, meal, or weight values.",
+    "OpenClaw is the primary interaction layer for meal and weight capture before direct vendor API setup.",
+    "Withings should become the weight/body-composition source once the scale arrives tonight.",
+    "Meal photo estimation should stay confidence-banded and correction-first before it drives coaching.",
+    "Weekly calorie calibration starts only after enough weight trend and logged intake exist."
+  ];
+}
+
+function bodyLedgerPlaceholders(ledger: NormalizedDailyLedger, coverageValue: string | undefined) {
+  return [
+    {
+      id: "body-ledger-weight",
+      label: "Weight",
+      value: ledger.weightKg ? `${ledger.weightKg.value.toFixed(1)} kg` : "Missing",
+      source: ledger.weightKg ? ledger.weightKg.source : "Manual row or Withings later"
+    },
+    {
+      id: "body-ledger-meal",
+      label: "Meals",
+      value: ledger.meals.length ? `${ledger.meals.length}` : "Missing",
+      source: ledger.meals.length ? "OpenClaw meal rows" : "OpenClaw capture path"
+    },
+    {
+      id: "body-ledger-hrv",
+      label: "HRV",
+      value: ledger.hrvMs ? `${ledger.hrvMs.value} ms` : "Missing",
+      source: ledger.hrvMs ? ledger.hrvMs.source : "Wearable source after sleep exists"
+    },
+    {
+      id: "body-ledger-resting_heart_rate",
+      label: "Resting HR",
+      value: ledger.restingHeartRateBpm ? `${ledger.restingHeartRateBpm.value} bpm` : "Missing",
+      source: ledger.restingHeartRateBpm ? ledger.restingHeartRateBpm.source : "Wearable source after sleep exists"
+    },
+    {
+      id: "body-ledger-coverage",
+      label: "Coverage",
+      value: coverageValue ?? "0%",
+      source: "Available normalized rows only"
+    }
+  ];
+}
+
+export default async function Home() {
+  const date = todayKey();
+  const events = await getDefaultRawHealthEventStore().list();
+  const { ledger, bodyModeReasons } = buildNormalizedDailyLedger({ date, events });
+  const today = buildTodayInteractionModel(ledger, bodyModeReasons);
+  const coverageItems = sourceCoverage(ledger);
+  const coverageValue = today.metricLinks.find((metric) => metric.label === "Coverage")?.value;
+  const metricAnchorIds = new Set(today.metricLinks.map((metric) => `body-ledger-${metric.metric}`));
+  const placeholderRows = bodyLedgerPlaceholders(ledger, coverageValue).filter((item) => !metricAnchorIds.has(item.id));
+
   return (
     <main className="shell">
       <section className="hero" aria-labelledby="hero-heading">
         <div className="hero-copy">
           <p className="eyebrow">Personal Health OS</p>
-          <h1 id="hero-heading">Today runs on body mode, coverage, and the next missing signal.</h1>
+          <h1 id="hero-heading">A body ledger that stays empty until real signals land.</h1>
           <p className="lede">
-            A simple operator surface for James and future agents: see what the body mode says,
-            why it says it, and which safe capture path should happen next.
+            Health OS is the private control surface for OpenClaw meal capture, Withings weight trend,
+            Oura/Apple recovery signals, and weekly calorie calibration. No direct vendor setup is
+            required for this cockpit to tell the truth about what is present or missing.
           </p>
           <div className="hero-actions" aria-label="Today actions">
             <a className="button button--primary" href={today.primaryAction.href}>{today.primaryAction.label}</a>
@@ -106,26 +201,13 @@ export default function Home() {
                 <em>{metric.source}</em>
               </a>
             ))}
-            <div id="body-ledger-weight" className="ledger-placeholder">
-              <span>Weight</span>
-              <strong>Missing</strong>
-              <em>Manual Body Ledger row or smart scale later</em>
-            </div>
-            <div id="body-ledger-hrv" className="ledger-placeholder">
-              <span>HRV</span>
-              <strong>Missing</strong>
-              <em>Check wearable permissions after sleep exists</em>
-            </div>
-            <div id="body-ledger-resting_heart_rate" className="ledger-placeholder">
-              <span>Resting HR</span>
-              <strong>Missing</strong>
-              <em>Check wearable permissions after sleep exists</em>
-            </div>
-            <div id="body-ledger-coverage" className="ledger-placeholder">
-              <span>Coverage</span>
-              <strong>{today.metricLinks.find((metric) => metric.label === "Coverage")?.value}</strong>
-              <em>Available normalized rows only</em>
-            </div>
+            {placeholderRows.map((item) => (
+              <div key={item.id} id={item.id} className="ledger-placeholder">
+                <span>{item.label}</span>
+                <strong>{item.value}</strong>
+                <em>{item.source}</em>
+              </div>
+            ))}
           </div>
         </article>
 
@@ -137,7 +219,7 @@ export default function Home() {
           <ul className="coverage-list">
             {coverageItems.map((item) => (
               <li key={item.label}>
-                <span className={`coverage-mark coverage-mark--${item.status.replaceAll(" ", "-")}`} />
+                <span className={`coverage-mark coverage-mark--${statusClass(item.status)}`} />
                 <div>
                   <strong>{item.label}</strong>
                   <p>{item.source}</p>
@@ -151,16 +233,16 @@ export default function Home() {
         <article className="panel capture-panel">
           <div className="section-heading">
             <p className="eyebrow">Capture</p>
-            <h2>Smallest useful asks</h2>
+            <h2>OpenClaw first</h2>
           </div>
           <div className="capture-stack">
             <div>
               <span className="capture-label">Meal</span>
-              <p>OpenClaw can accept text now: "chicken bowl 650 kcal 42g protein". Photo estimation is the next live path.</p>
+              <p>Text/manual macros work now. Photo references should queue a low-confidence estimate until James confirms or corrects it.</p>
             </div>
             <div>
               <span className="capture-label">Weight</span>
-              <p>Manual weight is enough for calibration today. Smart scale support should feed the same normalized weight row.</p>
+              <p>Manual weight is enough today. Withings should write the same normalized weight/body-composition rows once connected.</p>
             </div>
           </div>
         </article>
@@ -168,14 +250,14 @@ export default function Home() {
         <article className="panel integration-panel">
           <div className="section-heading">
             <p className="eyebrow">OpenClaw</p>
-            <h2>Integration status</h2>
+            <h2>Active contracts</h2>
           </div>
           <p>
-            Current API routes are contract stubs. Next useful work is trusted ingestion, persistence,
-            then a daily summary endpoint that OpenClaw can send over iMessage.
+            The useful path is OpenClaw ingestion and assistant-safe summaries first. Direct Oura and
+            Withings API setup can come after the ledger proves the daily loop.
           </p>
           <div className="endpoint-list">
-            {endpoints.map((endpoint) => (
+            {activeEndpoints().map((endpoint) => (
               <div key={endpoint.path}>
                 <code>{endpoint.method}</code>
                 <strong>{endpoint.path}</strong>
@@ -188,10 +270,10 @@ export default function Home() {
         <article className="panel readiness-panel">
           <div className="section-heading">
             <p className="eyebrow">Ready next</p>
-            <h2>Apple Watch + scale path</h2>
+            <h2>Scale + meal estimator path</h2>
           </div>
           <ul className="readiness-list">
-            {readiness.map((item) => (
+            {readiness(ledger).map((item) => (
               <li key={item}>{item}</li>
             ))}
           </ul>

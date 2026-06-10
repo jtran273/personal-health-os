@@ -62,7 +62,7 @@ export function buildTodayInteractionModel(
     metricLinks: collectMetricLinks(ledger, dateParam),
     dataStateCopy: ledger.rawEventIds.length
       ? "Derived from normalized ledger rows. No raw provider payloads or secrets are shown."
-      : "Sample interaction model until persistence has rows. Do not treat this as a health claim."
+      : "No live ledger rows yet. Empty states are intentional and should not be treated as health claims."
   };
 }
 
