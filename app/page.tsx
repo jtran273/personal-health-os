@@ -131,6 +131,15 @@ export default async function Home() {
   const coverageValue = today.metricLinks.find((metric) => metric.label === "Coverage")?.value;
   const metricAnchorIds = new Set(today.metricLinks.map((metric) => `body-ledger-${metric.metric}`));
   const placeholderRows = bodyLedgerPlaceholders(ledger, coverageValue).filter((item) => !metricAnchorIds.has(item.id));
+  const hasLiveRows = ledger.rawEventIds.length > 0;
+  const modeLabel = hasLiveRows ? `${today.mode[0].toUpperCase()}${today.mode.slice(1)} mode` : "Setup mode";
+  const planHeadline = hasLiveRows ? today.planHeadline : "Capture the first real signal.";
+  const planCopy = hasLiveRows
+    ? today.planCopy
+    : "Start with one meal or weight row. The page will stay conservative until Oura, Apple Health, or Withings data lands.";
+  const explanation = hasLiveRows
+    ? today.explanation
+    : "No body-mode recommendation yet. Health OS is waiting for real ledger rows before making recovery or calorie claims.";
 
   return (
     <main className="shell">
@@ -154,8 +163,8 @@ export default async function Home() {
             <span className="status-dot" aria-hidden="true" />
             <span>{today.date}</span>
           </div>
-          <h2 id="mode-heading">{today.mode[0].toUpperCase() + today.mode.slice(1)} mode</h2>
-          <p>{today.planCopy}</p>
+          <h2 id="mode-heading">{modeLabel}</h2>
+          <p>{planCopy}</p>
           <dl className="metrics-strip">
             {today.metricLinks.slice(0, 3).map((metric) => (
               <div key={metric.metric}>
@@ -173,9 +182,9 @@ export default async function Home() {
         <article className="panel today-panel" id="today-plan">
           <div className="section-heading">
             <p className="eyebrow">Today plan</p>
-            <h2>{today.planHeadline}</h2>
+            <h2>{planHeadline}</h2>
           </div>
-          <p>{today.planCopy}</p>
+          <p>{planCopy}</p>
           <div className="action-list" aria-label="Missing-signal prompts">
             {today.missingSignals.map((prompt) => (
               <a key={prompt.signal} href={prompt.href}>
@@ -192,7 +201,7 @@ export default async function Home() {
             <p className="eyebrow">Why this</p>
             <h2>Recommendation from ledger inputs</h2>
           </div>
-          <p>{today.explanation}</p>
+          <p>{explanation}</p>
           <div className="ledger-row-list" aria-label="Body Ledger metric links">
             {today.metricLinks.map((metric) => (
               <a key={metric.metric} id={`body-ledger-${metric.metric}`} href={metric.href}>
