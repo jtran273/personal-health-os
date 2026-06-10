@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Static OpenClaw chat prototype hosted in the current Meals tab.
+/// OpenClaw-first meal capture surface. Empty states stay honest until real meals land.
 struct MealsView: View {
     @State private var viewModel: MealsViewModel
     @State private var draft = ""
@@ -19,35 +19,14 @@ struct MealsView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
-                    TimeDivider("This morning")
-
-                    MorningBriefingCard()
+                    captureOverview
                     TodayFoodCard(
                         calories: viewModel.todayCaloriesLabel,
                         protein: viewModel.todayProteinLabel,
                         mealCount: viewModel.meals.count
                     )
-
-                    ChatBubble(role: .me, text: "ok. weigh-in?")
-                    ChatBubble(role: .system, text: "Step on. I'll read the scale.")
-                    ChatBubble(role: .me, text: "184.0")
-
-                    WeightTrendCard()
-
-                    ChatBubble(role: .me, photoCaption: "breakfast")
-                    MealEstimateCard()
-
-                    TimeDivider("12:18 pm")
-
-                    SystemCard {
-                        Text("Walk window in 12 min. ")
-                            .foregroundStyle(Theme.textBody)
-                        + Text("68°F, clear")
-                            .font(.custom(Tokens.FontFamily.mono, size: 11))
-                            .foregroundStyle(Theme.textSecondary)
-                    }
-
                     loggedMeals
+                    estimatorPlanCard
                     suggestedReplies
                 }
                 .padding(.horizontal, 16)
@@ -73,32 +52,17 @@ struct MealsView: View {
 
     private var header: some View {
         HStack(spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [Theme.accent, Theme.red],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                Circle()
-                    .fill(Theme.background)
-                    .padding(3)
-                Text("O")
-                    .font(.custom(Tokens.FontFamily.serif, size: 18))
-                    .foregroundStyle(Theme.accent)
-            }
-            .frame(width: 38, height: 38)
-            .accessibilityHidden(true)
+            AppLogoMark()
 
             VStack(alignment: .leading, spacing: 3) {
-                Text("OpenClaw")
+                Text("Meals")
                     .font(AppFont.bodyMedium)
                     .foregroundStyle(Theme.textPrimary)
-                Text("quiet · always on")
+                Text("OpenClaw capture · corrections become memory")
                     .font(.custom(Tokens.FontFamily.mono, size: 10.5))
                     .foregroundStyle(Theme.textSecondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
             }
 
             Spacer()
@@ -119,12 +83,50 @@ struct MealsView: View {
 
     private var suggestedReplies: some View {
         FlowLayout(spacing: 6, rowSpacing: 6) {
-            SuggestedReplyPill("I'll head out at 12:30")
-            SuggestedReplyPill("Move to 1pm")
-            SuggestedReplyPill("What about tomorrow's lift?")
+            SuggestedReplyPill("same breakfast as yesterday")
+            SuggestedReplyPill("chicken bowl 650 cal 42g protein")
+            SuggestedReplyPill("add a photo estimate")
         }
         .padding(.top, 2)
         .padding(.horizontal, 4)
+    }
+
+    private var captureOverview: some View {
+        SystemCard {
+            HStack(alignment: .top, spacing: 12) {
+                AppLogoMark(size: .small)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    CardHeader(title: "OpenClaw meal loop", chip: SourceChip(label: "OpenClaw", confidence: viewModel.meals.isEmpty ? .low : .high))
+
+                    Text("Use text now. Photo estimates should stay low/medium confidence until James confirms, then corrections become known foods.")
+                        .font(AppFont.caption)
+                        .foregroundStyle(Theme.textSecondary)
+                        .lineSpacing(2)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    HStack(spacing: 8) {
+                        CaptureStep(number: "1", label: "Capture")
+                        CaptureStep(number: "2", label: "Estimate")
+                        CaptureStep(number: "3", label: "Correct")
+                    }
+                }
+            }
+        }
+    }
+
+    private var estimatorPlanCard: some View {
+        SystemCard {
+            VStack(alignment: .leading, spacing: 10) {
+                CardHeader(title: "Photo estimator guardrails", chip: SourceChip(source: .mealPhoto, confidence: .low))
+
+                VStack(alignment: .leading, spacing: 8) {
+                    GuardrailRow(icon: "camera.metering.center.weighted", text: "Photos are accepted as evidence, not truth.")
+                    GuardrailRow(icon: "list.bullet.clipboard", text: "USDA/Open Food Facts grounding should beat free-form guessing.")
+                    GuardrailRow(icon: "scalemass", text: "Withings trend calibrates the weekly calorie math.")
+                }
+            }
+        }
     }
 
     private var inputBar: some View {
@@ -145,7 +147,7 @@ struct MealsView: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Attach")
 
-                TextField("Tell OpenClaw...", text: $draft)
+                TextField("Meal, weight, or photo note...", text: $draft)
                     .font(AppFont.body)
                     .foregroundStyle(Theme.textPrimary)
                     .textInputAutocapitalization(.sentences)
@@ -219,84 +221,62 @@ struct MealsView: View {
                     }
                 }
             }
+        } else {
+            SystemCard {
+                VStack(alignment: .leading, spacing: 10) {
+                    CardHeader(title: "No meals logged today", chip: SourceChip(source: .manual, confidence: .low))
+                    Text("Empty is better than fake calories. Add a text meal with calories/protein now, or attach a photo when the estimator queue exists.")
+                        .font(AppFont.caption)
+                        .foregroundStyle(Theme.textSecondary)
+                        .lineSpacing(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
         }
     }
 }
 
-private enum ChatRole {
-    case me
-    case system
-}
-
-private struct ChatBubble: View {
-    let role: ChatRole
-    let text: String?
-    let photoCaption: String?
-
-    init(role: ChatRole, text: String) {
-        self.role = role
-        self.text = text
-        self.photoCaption = nil
-    }
-
-    init(role: ChatRole, photoCaption: String) {
-        self.role = role
-        self.text = nil
-        self.photoCaption = photoCaption
-    }
+private struct CaptureStep: View {
+    let number: String
+    let label: String
 
     var body: some View {
-        HStack(alignment: .bottom, spacing: 0) {
-            if role == .me { Spacer(minLength: 44) }
-
-            Group {
-                if let photoCaption {
-                    PhotoPlaceholder(caption: photoCaption)
-                        .padding(6)
-                } else {
-                    Text(text ?? "")
-                        .font(AppFont.body)
-                        .lineSpacing(1)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 10)
-                }
-            }
-            .foregroundStyle(role == .me ? Theme.background : Theme.textPrimary)
-            .background(bubbleBackground)
-            .clipShape(bubbleShape)
-            .overlay {
-                if role == .system {
-                    bubbleShape
-                        .strokeBorder(Theme.hairline, lineWidth: 1)
-                }
-            }
-            .frame(maxWidth: 300, alignment: role == .me ? .trailing : .leading)
-
-            if role == .system { Spacer(minLength: 44) }
+        HStack(spacing: 6) {
+            Text(number)
+                .font(.custom(Tokens.FontFamily.mono, size: 10))
+                .foregroundStyle(Theme.background)
+                .frame(width: 18, height: 18)
+                .background(Circle().fill(Theme.textPrimary))
+            Text(label)
+                .font(.custom(Tokens.FontFamily.sansMedium, size: 11.5))
+                .foregroundStyle(Theme.textBody)
         }
-        .frame(maxWidth: .infinity, alignment: role == .me ? .trailing : .leading)
-        .padding(.bottom, 4)
-    }
-
-    @ViewBuilder
-    private var bubbleBackground: some View {
-        if role == .me {
-            Theme.textPrimary
-        } else {
-            Theme.surface
-        }
-    }
-
-    private var bubbleShape: UnevenRoundedRectangle {
-        UnevenRoundedRectangle(
-            cornerRadii: .init(
-                topLeading: 18,
-                bottomLeading: role == .me ? 18 : 4,
-                bottomTrailing: role == .me ? 4 : 18,
-                topTrailing: 18
-            ),
-            style: .continuous
+        .padding(.horizontal, 8)
+        .frame(height: 30)
+        .background(
+            Capsule()
+                .fill(Theme.surface)
+                .overlay(Capsule().strokeBorder(Theme.hairline, lineWidth: 1))
         )
+    }
+}
+
+private struct GuardrailRow: View {
+    let icon: String
+    let text: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Theme.accent)
+                .frame(width: 18)
+
+            Text(text)
+                .font(AppFont.caption)
+                .foregroundStyle(Theme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 }
 
@@ -320,45 +300,6 @@ private struct SystemCard<Content: View>: View {
             )
             .padding(.trailing, 34)
             .padding(.bottom, 6)
-    }
-}
-
-private struct MorningBriefingCard: View {
-    var body: some View {
-        SystemCard {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack(spacing: 6) {
-                    Circle()
-                        .fill(Theme.yellow)
-                        .frame(width: 9, height: 9)
-                    Text("Yellow - short sleep")
-                        .kickerStyle(color: Theme.textBody)
-                    Rectangle()
-                        .fill(Theme.hairline)
-                        .frame(height: 1)
-                    Text("6:55 am")
-                        .font(.custom(Tokens.FontFamily.mono, size: 10))
-                        .foregroundStyle(Theme.textSecondary)
-                }
-                .padding(.bottom, 8)
-
-                Text("Slept ")
-                    .foregroundStyle(Theme.textPrimary)
-                + Text("6h 12m")
-                    .font(AppFont.bodyMedium)
-                    .foregroundStyle(Theme.textPrimary)
-                + Text(". HRV down 18%.")
-                    .foregroundStyle(Theme.textPrimary)
-
-                HStack(alignment: .firstTextBaseline, spacing: 0) {
-                    Text("One thing: ")
-                        .foregroundStyle(Theme.textBody)
-                    Text("skip the lift, walk 25 min at lunch.")
-                        .foregroundStyle(Theme.accent)
-                }
-                .padding(.top, 6)
-            }
-        }
     }
 }
 
@@ -395,89 +336,6 @@ private struct TodayFoodCard: View {
                 Text(mealCount == 0 ? "No meals logged today." : "\(mealCount) meal\(mealCount == 1 ? "" : "s") logged today.")
                     .font(AppFont.caption)
                     .foregroundStyle(Theme.textSecondary)
-            }
-        }
-    }
-}
-
-private struct WeightTrendCard: View {
-    var body: some View {
-        SystemCard {
-            VStack(alignment: .leading, spacing: 10) {
-                CardHeader(title: "Weight, 7-day trend", chip: SourceChip(source: .manual, confidence: .high))
-
-                HStack(alignment: .bottom, spacing: 14) {
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text("184.0")
-                            .metricNumber(size: 32)
-                            .foregroundStyle(Theme.textPrimary)
-                        Text("lb")
-                            .font(AppFont.caption)
-                            .foregroundStyle(Theme.textSecondary)
-                    }
-
-                    VStack(alignment: .leading, spacing: 3) {
-                        Sparkline(
-                            data: [185.6, 185.2, 184.9, 184.8, 184.6, 184.4, 184.0],
-                            confidence: .high,
-                            color: Theme.accent
-                        )
-                        .frame(width: 120, height: 28)
-
-                        Text("-0.9 lb this week")
-                            .font(.custom(Tokens.FontFamily.mono, size: 10))
-                            .foregroundStyle(Theme.textSecondary)
-                    }
-
-                    Spacer(minLength: 0)
-                }
-            }
-        }
-    }
-}
-
-private struct MealEstimateCard: View {
-    var body: some View {
-        SystemCard {
-            VStack(alignment: .leading, spacing: 10) {
-                CardHeader(title: "Meal estimate", chip: SourceChip(source: .mealPhoto, confidence: .med))
-
-                VStack(spacing: 7) {
-                    EstimateRow(label: "kcal", confidence: .med, value: "410")
-                    EstimateRow(label: "protein", confidence: .med, value: "12 g")
-                    EstimateRow(label: "carbs", confidence: .low, value: "62 g")
-                }
-
-                Text("Looks like your usual oats + blueberries + black coffee. Save as \"regular breakfast\"?")
-                    .font(AppFont.caption)
-                    .foregroundStyle(Theme.textSecondary)
-                    .lineSpacing(1)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                HStack(spacing: 8) {
-                    Button {} label: {
-                        Text("Save & log")
-                            .font(.custom(Tokens.FontFamily.sansMedium, size: 12))
-                            .foregroundStyle(Theme.background)
-                            .padding(.horizontal, 12)
-                            .frame(height: 34)
-                            .background(Capsule().fill(Theme.textPrimary))
-                    }
-                    .buttonStyle(.plain)
-
-                    Button {} label: {
-                        Text("Edit")
-                            .font(.custom(Tokens.FontFamily.sansMedium, size: 12))
-                            .foregroundStyle(Theme.textBody)
-                            .padding(.horizontal, 12)
-                            .frame(height: 34)
-                            .background(
-                                Capsule()
-                                    .strokeBorder(Theme.hairlineStrong, lineWidth: 1)
-                            )
-                    }
-                    .buttonStyle(.plain)
-                }
             }
         }
     }
@@ -537,102 +395,6 @@ private struct CardHeader<Chip: View>: View {
                 .frame(height: 1)
             chip
         }
-    }
-}
-
-private struct EstimateRow: View {
-    let label: String
-    let confidence: Confidence
-    let value: String
-
-    var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
-            Text(label)
-                .font(.custom(Tokens.FontFamily.mono, size: 10.5))
-                .foregroundStyle(Theme.textSecondary)
-                .frame(width: 54, alignment: .leading)
-
-            ConfidenceRule(confidence: confidence)
-                .frame(height: 1)
-
-            Text(value)
-                .font(.custom(Tokens.FontFamily.serif, size: 16))
-                .foregroundStyle(Theme.textPrimary)
-                .monospacedDigit()
-        }
-    }
-}
-
-private struct ConfidenceRule: View {
-    let confidence: Confidence
-
-    var body: some View {
-        GeometryReader { geometry in
-            Path { path in
-                path.move(to: CGPoint(x: 0, y: 0.5))
-                path.addLine(to: CGPoint(x: geometry.size.width, y: 0.5))
-            }
-            .stroke(
-                Theme.hairlineStrong,
-                style: StrokeStyle(lineWidth: 1, lineCap: .round, dash: dash)
-            )
-        }
-    }
-
-    private var dash: [CGFloat] {
-        switch confidence {
-        case .high: []
-        case .med: [3, 2]
-        case .low: [1, 2]
-        }
-    }
-}
-
-private struct PhotoPlaceholder: View {
-    let caption: String
-
-    var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: Tokens.Radius.cardInner, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [Theme.accentSoft, Theme.accent.opacity(0.78)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-
-            Image(systemName: "photo")
-                .font(.system(size: 32, weight: .regular))
-                .foregroundStyle(Theme.surface.opacity(0.78))
-
-            Text(caption)
-                .font(.custom(Tokens.FontFamily.mono, size: 11))
-                .tracking(0.4)
-                .foregroundStyle(Theme.surface)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
-                .padding(.leading, 8)
-                .padding(.bottom, 7)
-        }
-        .frame(width: 180, height: 180)
-    }
-}
-
-private struct TimeDivider: View {
-    let title: String
-
-    init(_ title: String) {
-        self.title = title
-    }
-
-    var body: some View {
-        Text(title)
-            .font(.custom(Tokens.FontFamily.mono, size: 10))
-            .tracking(0.6)
-            .textCase(.uppercase)
-            .foregroundStyle(Theme.textFaint)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 6)
     }
 }
 

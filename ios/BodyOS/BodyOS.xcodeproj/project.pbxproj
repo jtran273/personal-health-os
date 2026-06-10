@@ -31,6 +31,7 @@
 		4E6F7F11A390D5DF2433540E /* BodyLedgerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2F417D9B2DE1EB06E01D232 /* BodyLedgerView.swift */; };
 		4F426F2025A27CB8A2F3E6CE /* DailyLedgerEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 241A9D749956E4FCA12FCE14 /* DailyLedgerEntry.swift */; };
 		535C94A2101AD4DE94A4379C /* WeeklyReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFC52A1E50D144A4EDE50E58 /* WeeklyReviewView.swift */; };
+		623826C8B3789AB8E28DEDF8 /* AppLogoMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04E355AD11F1026BFFA9F851 /* AppLogoMark.swift */; };
 		62FA89E5A8B34D5246A42D1F /* InstrumentSerif-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 763F77126B81AB8F0D58A710 /* InstrumentSerif-Regular.ttf */; };
 		650DD28676853DFCCA7F3E14 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6C9D0F2715ABAAEB073EE74 /* TodayView.swift */; };
 		6F84CB16F75D892DEA11C227 /* MealsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F866E9A306F52DCB19BA03AC /* MealsView.swift */; };
@@ -96,6 +97,7 @@
 /* Begin PBXFileReference section */
 		010205E6E650384A68B4944C /* MealLogService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealLogService.swift; sourceTree = "<group>"; };
 		01EC918F884FCCBF08AE65BF /* HealthKitIngestor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitIngestor.swift; sourceTree = "<group>"; };
+		04E355AD11F1026BFFA9F851 /* AppLogoMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogoMark.swift; sourceTree = "<group>"; };
 		07EAE81E954636926E7A37D6 /* Tokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tokens.swift; sourceTree = "<group>"; };
 		084C8DAA48C20577AF4DF4C5 /* Meal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Meal.swift; sourceTree = "<group>"; };
 		09D9187B9FEE8025B440F0E6 /* HealthKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitService.swift; sourceTree = "<group>"; };
@@ -306,6 +308,7 @@
 		81552980DBC601E867F567B3 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				04E355AD11F1026BFFA9F851 /* AppLogoMark.swift */,
 				D66B2D7F6886BD6FF1200B83 /* BodyModeBadge.swift */,
 				50EDA60946D4F7C9A04DCBC1 /* BodyModeOrb.swift */,
 				AAA86D9AB2E25B285983B971 /* LedgerRow.swift */,
@@ -505,6 +508,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C93AD222451AABD3FD5E4A4B /* AppDependencies.swift in Sources */,
+				623826C8B3789AB8E28DEDF8 /* AppLogoMark.swift in Sources */,
 				4E6F7F11A390D5DF2433540E /* BodyLedgerView.swift in Sources */,
 				A197C2793F95FA0817662A92 /* BodyLedgerViewModel.swift in Sources */,
 				70A16850895A4BF843A676FD /* BodyMode.swift in Sources */,

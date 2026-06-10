@@ -55,14 +55,18 @@ struct TodayView: View {
 
     private var statusHeader: some View {
         HStack(alignment: .bottom) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Today")
-                    .kickerStyle()
-                Text(Self.dateString(viewModel.entry?.date ?? Date()))
-                    .font(.custom(Tokens.FontFamily.serif, size: 26))
-                    .foregroundStyle(Theme.textPrimary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+            HStack(alignment: .center, spacing: 12) {
+                AppLogoMark(size: .small)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("BodyOS")
+                        .kickerStyle()
+                    Text(Self.dateString(viewModel.entry?.date ?? Date()))
+                        .font(.custom(Tokens.FontFamily.serif, size: 26))
+                        .foregroundStyle(Theme.textPrimary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                }
             }
 
             Spacer(minLength: 16)

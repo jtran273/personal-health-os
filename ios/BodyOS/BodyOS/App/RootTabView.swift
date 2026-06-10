@@ -29,7 +29,7 @@ struct RootTabView: View {
                 deficitEstimator: dependencies.deficitEstimator,
                 bodyModeEngine: dependencies.bodyModeEngine
             ))
-                .tabItem { Label("Copilot", systemImage: "bubble.left") }
+                .tabItem { Label("Meals", systemImage: "fork.knife") }
                 .tag(RootTab.meals)
 
             BodyLedgerView(viewModel: BodyLedgerViewModel(
@@ -58,6 +58,7 @@ struct RootTabView: View {
                 .tabItem { Label("Sources", systemImage: "point.3.connected.trianglepath.dotted") }
                 .tag(RootTab.sources)
         }
+        .tint(Theme.textPrimary)
     }
 }
 
