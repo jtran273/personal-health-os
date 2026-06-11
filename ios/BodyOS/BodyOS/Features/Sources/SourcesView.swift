@@ -14,14 +14,11 @@ struct SourcesView: View {
             VStack(alignment: .leading, spacing: 0) {
                 header
                 coverageHero
-                appleHealthPilot
-                routingTable
+                setupChecklist
                 sourceGroup("Connected", sources: viewModel.connectedSources)
-                sourceGroup("Pending", sources: viewModel.pendingSources)
                 sourceGroup("Available", sources: viewModel.availableSources)
-                sourceGroup("Disabled", sources: viewModel.disabledSources)
-                knownFoods
-                footer
+                sourceGroup("Next", sources: viewModel.pendingSources)
+                sourceGroup("Off", sources: viewModel.disabledSources)
             }
             .padding(.bottom, 110)
         }
@@ -37,12 +34,11 @@ struct SourcesView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Body OS")
-                .kickerStyle()
-            Text("What's flowing in.")
+            TideLockup(size: .small)
+            Text("Settings")
                 .font(.custom(Tokens.FontFamily.serif, size: 30))
                 .foregroundStyle(Theme.textPrimary)
-            Text("Each metric is routed to the source that's best at it. Add more devices and coverage rises automatically.")
+            Text("Connect Oura, Apple Health, scale, and meal capture.")
                 .font(.custom(Tokens.FontFamily.sansRegular, size: 13.5))
                 .lineSpacing(3)
                 .foregroundStyle(Theme.textSecondary)
@@ -84,9 +80,46 @@ struct SourcesView: View {
         .padding(.horizontal, 16)
     }
 
+    private var setupChecklist: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SourcesSectionHead(label: "Setup", right: "start here")
+            VStack(spacing: 0) {
+                SetupStepRow(
+                    index: 1,
+                    title: "Connect Oura",
+                    detail: "Sleep and recovery become the main source."
+                )
+                Divider().background(Theme.hairline)
+                SetupStepRow(
+                    index: 2,
+                    title: "Weigh in",
+                    detail: "Daily scale readings show if weight is moving."
+                )
+                Divider().background(Theme.hairline)
+                SetupStepRow(
+                    index: 3,
+                    title: "Log first meal",
+                    detail: "Calories, protein, and net over/under can start."
+                )
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 4)
+            .background(
+                RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
+                    .fill(Theme.surface)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
+                    .strokeBorder(Theme.hairline, lineWidth: 1)
+            )
+        }
+        .padding(.top, 20)
+        .padding(.horizontal, 16)
+    }
+
     private var appleHealthPilot: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SourcesSectionHead(label: "Apple Watch pilot", right: "14-day trial")
+            SourcesSectionHead(label: "Apple Health bridge", right: "optional")
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(viewModel.appleHealthPilotRows) { row in
                     PilotChecklistRow(row: row)
@@ -156,11 +189,19 @@ struct SourcesView: View {
                 SourcesSectionHead(label: title, right: "\(sources.count)")
                 VStack(spacing: 10) {
                     ForEach(sources) { source in
-                        SourceCard(source: source) {
+                        SourceCard(
+                            source: source,
+                            secondaryActionText: source.id == "oura" && source.status != .available ? "manage" : nil,
+                            secondaryAction: source.id == "oura" ? { showOuraSheet = true } : nil
+                        ) {
                             if source.status == .disabled {
                                 return
                             } else if source.id == "oura" {
-                                showOuraSheet = true
+                                if source.status == .available {
+                                    showOuraSheet = true
+                                } else {
+                                    Task { await viewModel.syncOura() }
+                                }
                             } else if source.id == "healthkit" {
                                 Task { await viewModel.connectHealthKit() }
                             }
@@ -180,7 +221,7 @@ struct SourcesView: View {
                 Text("No known foods learned yet")
                     .font(AppFont.caption)
                     .foregroundStyle(Theme.textPrimary)
-                Text("This stays empty until meals are actually logged. BodyOS should not ship sample foods or calories as live data.")
+                Text("This stays empty until meals are actually logged. Tide should not ship sample foods or calories as live data.")
                     .font(.custom(Tokens.FontFamily.sansRegular, size: 11.5))
                     .foregroundStyle(Theme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -200,22 +241,42 @@ struct SourcesView: View {
         .padding(.horizontal, 16)
     }
 
-    private var footer: some View {
-        Text("Use each device for what it's good at. Never trust a single wearable as the full truth.")
-            .font(.custom(Tokens.FontFamily.serif, size: 14))
-            .italic()
-            .foregroundStyle(Theme.textSecondary)
-            .multilineTextAlignment(.center)
-            .lineSpacing(4)
-            .frame(maxWidth: .infinity)
-            .padding(.top, 24)
-            .padding(.horizontal, 28)
-            .padding(.bottom, 8)
+    private var footer: some View { EmptyView() }
+}
+
+private struct SetupStepRow: View {
+    let index: Int
+    let title: String
+    let detail: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Text("\(index)")
+                .font(.custom(Tokens.FontFamily.serif, size: 13))
+                .foregroundStyle(Theme.textPrimary)
+                .frame(width: 28, height: 28)
+                .background(Circle().fill(Theme.backgroundDeep))
+                .padding(.top, 9)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(AppFont.caption)
+                    .foregroundStyle(Theme.textPrimary)
+                Text(detail)
+                    .font(.custom(Tokens.FontFamily.sansRegular, size: 11.5))
+                    .lineSpacing(3)
+                    .foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.vertical, 10)
+        }
     }
 }
 
 private struct SourceCard: View {
     let source: BodySource
+    var secondaryActionText: String?
+    var secondaryAction: (() -> Void)?
     let action: () -> Void
 
     var body: some View {
@@ -273,6 +334,15 @@ private struct SourceCard: View {
                     .font(.custom(Tokens.FontFamily.sansRegular, size: 11.5))
                     .foregroundStyle(Theme.textSecondary)
                 Spacer()
+                if let secondaryActionText, let secondaryAction, source.status != .disabled {
+                    Button(action: secondaryAction) {
+                        Text(secondaryActionText)
+                            .font(AppFont.caption)
+                            .foregroundStyle(Theme.textSecondary)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.trailing, 12)
+                }
                 if source.status != .disabled {
                     Button(action: action) {
                         Text(actionText)

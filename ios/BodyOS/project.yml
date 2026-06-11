@@ -23,10 +23,11 @@ targets:
     deploymentTarget: "17.0"
 
     sources:
+      # Secrets.plist (gitignored) is intentionally bundled so OuraTokenStore can
+      # resolve the Oura PAT in local builds without pasting it into the Keychain.
       - path: BodyOS
         excludes:
           - "Resources/Info.plist.template"
-          - "Resources/Secrets.plist"
           - "Resources/Secrets.plist.example"
           - "DesignSystem/Fonts/README.md"
 
@@ -56,7 +57,7 @@ targets:
     info:
       path: BodyOS/Resources/Info.plist
       properties:
-        CFBundleDisplayName: BodyOS
+        CFBundleDisplayName: Tide
         CFBundleShortVersionString: "$(MARKETING_VERSION)"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         UILaunchScreen:
@@ -66,10 +67,10 @@ targets:
           - UIInterfaceOrientationPortrait
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
-        NSHealthShareUsageDescription: "BodyOS reads your sleep, steps, heart rate, and weight to give you one useful recommendation per day."
-        NSHealthUpdateUsageDescription: "BodyOS does not write to Apple Health yet."
-        NSCameraUsageDescription: "BodyOS uses your camera to log meals from photos."
-        NSPhotoLibraryUsageDescription: "BodyOS lets you pick meal photos from your library to log food."
+        NSHealthShareUsageDescription: "Tide reads your sleep, steps, heart rate, and weight to give you one useful recommendation per day."
+        NSHealthUpdateUsageDescription: "Tide does not write to Apple Health yet."
+        NSCameraUsageDescription: "Tide uses your camera to log meals from photos."
+        NSPhotoLibraryUsageDescription: "Tide lets you pick meal photos from your library to log food."
         UIAppFonts:
           - InstrumentSerif-Regular.ttf
           - Geist-Regular.ttf
@@ -87,3 +88,13 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.jamestran.bodyos.tests
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  BodyOS:
+    build:
+      targets:
+        BodyOS: all
+    test:
+      targets:
+        - BodyOSTests

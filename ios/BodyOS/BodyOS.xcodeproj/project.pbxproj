@@ -19,9 +19,11 @@
 		1C4F280178F3631FF755DB53 /* Sparkline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EC91DF1C7BC611B150363B9 /* Sparkline.swift */; };
 		20932071470244A99AC04C6B /* WeeklyReviewViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80B5E4476550301A77768513 /* WeeklyReviewViewModel.swift */; };
 		29E65A861A4E90C79A705D11 /* Meal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 084C8DAA48C20577AF4DF4C5 /* Meal.swift */; };
+		3217339812DB0B8F64608BFB /* OuraIngestorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C93AF831BBA2490892154601 /* OuraIngestorTests.swift */; };
 		339A6E60243E3C13770F0F5F /* Geist-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E5B94DD5FE62F089C0C74CAD /* Geist-Medium.ttf */; };
 		33BAFFB92115AFE3379B4E31 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 126CD0E7EA3AB61B8D8AA5CD /* Typography.swift */; };
 		38D89240DCB343D66A275CE1 /* WeightTrendService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76FAD05301F10E503000129 /* WeightTrendService.swift */; };
+		38FC26B2DB045EE010820CF7 /* Secrets.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3E4C3DC1722F87CD186228D9 /* Secrets.plist */; };
 		3A9F466704A0671946AC5065 /* OuraConnectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF7DEEA85CA7A143A7CA32BC /* OuraConnectionView.swift */; };
 		3E8042351F06A60B6BC4BF46 /* HealthDataRouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E675A325482AA86CE69094 /* HealthDataRouterTests.swift */; };
 		3EB46508CF425DEB2F62ABBD /* LedgerCoverage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D32D190AC1CCAA6B8C44EE62 /* LedgerCoverage.swift */; };
@@ -78,6 +80,7 @@
 		F3E88AA1052EF135B4E9ECB8 /* OpenClawHealthExportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4E92621C93484D88D77AEE5 /* OpenClawHealthExportTests.swift */; };
 		F4F09B48835D7BCF020233C0 /* WeightTrendServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DFD17AF9D23C5A22CC2FE2E /* WeightTrendServiceTests.swift */; };
 		F803DF59A6461BE53B2D6A14 /* Confidence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 736F58808352A925EE59AD21 /* Confidence.swift */; };
+		F839BF3EE6887F73383461CA /* AppBrand.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04660F518FA3AD2AA00B6B08 /* AppBrand.swift */; };
 		F840CBD6ACCCB1872BE80B95 /* TodayViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE9552BB28A26475FBAF06EF /* TodayViewModelTests.swift */; };
 		FB0A0EAEA2D4B89A23011B83 /* KnownFood.swift in Sources */ = {isa = PBXBuildFile; fileRef = D17F881668A461DBE6854EEB /* KnownFood.swift */; };
 		FB8EACC386B5B2CF33979F64 /* LedgerCoverageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA9C3F12249885A547ED8875 /* LedgerCoverageTests.swift */; };
@@ -98,6 +101,7 @@
 /* Begin PBXFileReference section */
 		010205E6E650384A68B4944C /* MealLogService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealLogService.swift; sourceTree = "<group>"; };
 		01EC918F884FCCBF08AE65BF /* HealthKitIngestor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitIngestor.swift; sourceTree = "<group>"; };
+		04660F518FA3AD2AA00B6B08 /* AppBrand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppBrand.swift; sourceTree = "<group>"; };
 		04E355AD11F1026BFFA9F851 /* AppLogoMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogoMark.swift; sourceTree = "<group>"; };
 		07EAE81E954636926E7A37D6 /* Tokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tokens.swift; sourceTree = "<group>"; };
 		084C8DAA48C20577AF4DF4C5 /* Meal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Meal.swift; sourceTree = "<group>"; };
@@ -115,6 +119,7 @@
 		395767C434567D134D4C2657 /* SleepRecovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepRecovery.swift; sourceTree = "<group>"; };
 		3B6E750E9F6EE32AA0EC4E1C /* HealthKitSourceAttributionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitSourceAttributionTests.swift; sourceTree = "<group>"; };
 		3CFA06FE7A5FD83DEF2AB52A /* SwiftDataLedgerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataLedgerStore.swift; sourceTree = "<group>"; };
+		3E4C3DC1722F87CD186228D9 /* Secrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Secrets.plist; sourceTree = "<group>"; };
 		41EAB19E65E7C7BFD4406603 /* MetricSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricSource.swift; sourceTree = "<group>"; };
 		444B958370EB603BDF3E8E9E /* DeficitEstimatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeficitEstimatorTests.swift; sourceTree = "<group>"; };
 		49E675A325482AA86CE69094 /* HealthDataRouterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthDataRouterTests.swift; sourceTree = "<group>"; };
@@ -161,6 +166,7 @@
 		BEC8F7B254353E81B8E3949F /* TodayViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayViewModel.swift; sourceTree = "<group>"; };
 		BF089F3BF8F7CB42DA94B65E /* OuraTokenStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OuraTokenStore.swift; sourceTree = "<group>"; };
 		C1097CEB4DBC7FBBA01B1FAC /* LedgerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LedgerStore.swift; sourceTree = "<group>"; };
+		C93AF831BBA2490892154601 /* OuraIngestorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OuraIngestorTests.swift; sourceTree = "<group>"; };
 		CB03CB653C13A1525A479478 /* BodyOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BodyOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CC6CA31CCE1CCDE0E5A44A18 /* SourcesViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SourcesViewModelTests.swift; sourceTree = "<group>"; };
 		CD7D20332A5A4A52B93E4A00 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -221,6 +227,7 @@
 		11094C6903E7187305E1D853 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				04660F518FA3AD2AA00B6B08 /* AppBrand.swift */,
 				39168EFC0C5FB882B52F5F0E /* AppDependencies.swift */,
 				6F7C4C0BAF0D949BC640CAC6 /* BodyOSApp.swift */,
 				614F8860BABFEAE8D79D761A /* RootTabView.swift */,
@@ -286,6 +293,7 @@
 				208BE63B4838D3086649EF8F /* Assets.xcassets */,
 				0D1AE60823311BDBBF2BE6E3 /* BodyOS.entitlements */,
 				CD7D20332A5A4A52B93E4A00 /* Info.plist */,
+				3E4C3DC1722F87CD186228D9 /* Secrets.plist */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -336,6 +344,7 @@
 				DAB55E909F70103339655FC5 /* MealsViewModelTests.swift */,
 				7C580235C35C22A26F43C24A /* MetricSampleTests.swift */,
 				A4E92621C93484D88D77AEE5 /* OpenClawHealthExportTests.swift */,
+				C93AF831BBA2490892154601 /* OuraIngestorTests.swift */,
 				CC6CA31CCE1CCDE0E5A44A18 /* SourcesViewModelTests.swift */,
 				6DCD1EF4DE001C2F3A4344F7 /* SwiftDataLedgerStoreTests.swift */,
 				BE9552BB28A26475FBAF06EF /* TodayViewModelTests.swift */,
@@ -501,6 +510,7 @@
 				9F79904C58863192C0B23044 /* Geist-Regular.ttf in Resources */,
 				62FA89E5A8B34D5246A42D1F /* InstrumentSerif-Regular.ttf in Resources */,
 				C23FD9ADBF135C167D0489B7 /* JetBrainsMono-Regular.ttf in Resources */,
+				38FC26B2DB045EE010820CF7 /* Secrets.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -511,6 +521,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F839BF3EE6887F73383461CA /* AppBrand.swift in Sources */,
 				C93AD222451AABD3FD5E4A4B /* AppDependencies.swift in Sources */,
 				623826C8B3789AB8E28DEDF8 /* AppLogoMark.swift in Sources */,
 				4E6F7F11A390D5DF2433540E /* BodyLedgerView.swift in Sources */,
@@ -584,6 +595,7 @@
 				B4B9EAA05709220E1BB70551 /* MealsViewModelTests.swift in Sources */,
 				E241AACA8F903A49ED9508A5 /* MetricSampleTests.swift in Sources */,
 				F3E88AA1052EF135B4E9ECB8 /* OpenClawHealthExportTests.swift in Sources */,
+				3217339812DB0B8F64608BFB /* OuraIngestorTests.swift in Sources */,
 				4A83EFBFB60DE0584672AEA7 /* SourcesViewModelTests.swift in Sources */,
 				B730D09A587AA97822765B56 /* SwiftDataLedgerStoreTests.swift in Sources */,
 				F840CBD6ACCCB1872BE80B95 /* TodayViewModelTests.swift in Sources */,
@@ -722,6 +734,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -805,6 +818,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

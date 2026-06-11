@@ -27,11 +27,15 @@ struct SettingsView: View {
                     }
                     .disabled(healthKitStatus == .requesting)
                 }
-                HStack {
-                    Text("Oura")
-                    Spacer()
-                    Text("Disabled")
-                        .foregroundStyle(Theme.textSecondary)
+                NavigationLink {
+                    OuraConnectionView()
+                } label: {
+                    HStack {
+                        Text("Oura")
+                        Spacer()
+                        Text(OuraTokenStore.shared.isConfigured ? "Connected" : "Not connected")
+                            .foregroundStyle(Theme.textSecondary)
+                    }
                 }
                 Toggle("Smart Scale", isOn: $smartScaleEnabled)
             }
@@ -63,7 +67,7 @@ struct SettingsView: View {
                     Spacer()
                     Text("0.1.0").foregroundStyle(Theme.textSecondary)
                 }
-                Text("BodyOS — a personal physical-health OS.")
+                Text("Tide — a personal physical-health copilot.")
                     .font(AppFont.caption)
                     .foregroundStyle(Theme.textSecondary)
             }

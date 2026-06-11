@@ -11,25 +11,42 @@ final class TodayViewModel {
 
     private let store: any LedgerStore
     private let healthKitIngestor: (any RecentHealthIngesting)?
+    private let ouraIngestor: (any RecentOuraIngesting)?
+    private let isOuraTokenConfigured: () -> Bool
 
     init(
         store: any LedgerStore,
-        healthKitIngestor: (any RecentHealthIngesting)? = nil
+        healthKitIngestor: (any RecentHealthIngesting)? = nil,
+        ouraIngestor: (any RecentOuraIngesting)? = nil,
+        isOuraTokenConfigured: @escaping () -> Bool = { OuraTokenStore.shared.isConfigured }
     ) {
         self.store = store
         self.healthKitIngestor = healthKitIngestor
+        self.ouraIngestor = ouraIngestor
+        self.isOuraTokenConfigured = isOuraTokenConfigured
     }
 
     func load() async {
+        var syncError: String?
         if UserDefaults.standard.bool(forKey: "source.healthKit"), let healthKitIngestor {
             do {
                 _ = try await healthKitIngestor.ingestRecent(days: 7)
                 lastSyncedAt = Date()
-                lastSyncError = nil
             } catch {
-                lastSyncError = error.localizedDescription
+                syncError = error.localizedDescription
             }
         }
+        // Oura wins sleep/recovery; the ingestor merges per-field so Apple Health movement is kept.
+        // No token: skip silently. Token but no ring data yet: ingest returns nil, no error, no fake values.
+        if isOuraTokenConfigured(), let ouraIngestor {
+            do {
+                _ = try await ouraIngestor.ingestRecent(days: 7)
+                lastSyncedAt = Date()
+            } catch {
+                syncError = syncError ?? error.localizedDescription
+            }
+        }
+        lastSyncError = syncError
         // P0 data integrity: Today must represent today's Apple Health ledger only.
         // Older populated days remain available for trends, but they should never masquerade
         // as current steps/recovery when today's HealthKit sync has not produced samples yet.
@@ -48,7 +65,7 @@ final class TodayViewModel {
 
     var modeHeadline: String {
         guard entry != nil else {
-            return "Waiting for Health data."
+            return "Set up sources."
         }
         switch activeMode {
         case .green: return "Push it."
@@ -59,7 +76,7 @@ final class TodayViewModel {
 
     var modeReason: String {
         guard let entry else {
-            return "Connect Apple Health in Sources to start the ledger."
+            return "Connect Oura, Apple Health, or scale in Settings."
         }
 
         if let readiness = entry.sleep?.readinessScore?.value {
@@ -84,17 +101,17 @@ final class TodayViewModel {
         guard let entry else {
             if UserDefaults.standard.bool(forKey: "source.healthKit") {
                 return TodayOneAction(
-                    title: "Refresh Apple Health.",
-                    reason: "Permission is set, but today's ledger has no readable Apple Watch or iPhone samples yet.",
+                    title: "Refresh sources.",
+                    reason: "Apple Health is connected, but no fresh samples are in today's ledger.",
                     window: "now",
                     systemImage: "arrow.clockwise"
                 )
             }
             return TodayOneAction(
-                title: "Connect Apple Health.",
-                reason: "The Today screen needs Apple Watch sleep, recovery, and movement signals before it can choose a useful action.",
+                title: "Connect sources.",
+                reason: "Oura handles recovery. Apple Health fills gaps. Scale anchors weight.",
                 window: "now",
-                systemImage: "applewatch"
+                systemImage: "point.3.connected.trianglepath.dotted"
             )
         }
         return oneAction(for: entry)
@@ -103,16 +120,16 @@ final class TodayViewModel {
     var openLoops: [TodayOpenLoop] {
         guard let entry else {
             if UserDefaults.standard.bool(forKey: "source.healthKit") {
-                return [TodayOpenLoop(id: "health-sync", label: "Apple Watch data not readable", since: "today", cta: "Refresh")]
+                return [TodayOpenLoop(id: "health-sync", label: "Source data not fresh", since: "today", cta: "Refresh")]
             }
-            return [TodayOpenLoop(id: "health", label: "Apple Health not connected", since: "needs permission", cta: "Connect")]
+            return [TodayOpenLoop(id: "health", label: "Sources not connected", since: "setup", cta: "Open")]
         }
 
         var loops: [TodayOpenLoop] = []
         if !UserDefaults.standard.bool(forKey: "source.healthKit") {
-            loops.append(TodayOpenLoop(id: "health", label: "Apple Health not connected", since: "needs permission", cta: "Connect"))
+            loops.append(TodayOpenLoop(id: "health", label: "Apple Health bridge off", since: "optional", cta: "Open"))
         } else if entry.sleep == nil && entry.steps == nil && entry.activeCalories == nil {
-            loops.append(TodayOpenLoop(id: "health-sync", label: "Apple Watch data not readable", since: "last sync", cta: "Refresh"))
+            loops.append(TodayOpenLoop(id: "health-sync", label: "Apple Health not fresh", since: "last sync", cta: "Refresh"))
         }
         if entry.weight == nil {
             loops.append(TodayOpenLoop(id: "weight", label: "Weight not logged", since: "today", cta: "Log now"))
@@ -121,7 +138,7 @@ final class TodayViewModel {
             loops.append(TodayOpenLoop(id: "food", label: "Meals not logged", since: "today", cta: "Add meal"))
         }
         if entry.sleep != nil && entry.sleep?.hrv == nil {
-            loops.append(TodayOpenLoop(id: "hrv", label: "HRV missing", since: "last Apple Health sync", cta: "Refresh"))
+            loops.append(TodayOpenLoop(id: "hrv", label: "HRV missing", since: "last source sync", cta: "Refresh"))
         }
         return Array(loops.prefix(3))
     }
@@ -137,7 +154,7 @@ final class TodayViewModel {
                     id: "sleep",
                     timeLabel: Self.timeString(sleep.totalSleepMinutes?.capturedAt ?? sleep.hrv?.capturedAt ?? entry.date),
                     text: sleepText,
-                    source: sleep.totalSleepMinutes?.source.displayName ?? sleep.hrv?.source.displayName ?? "Apple Watch",
+                    source: sleep.totalSleepMinutes?.source.displayName ?? sleep.hrv?.source.displayName ?? "Recovery",
                     confidence: sleep.totalSleepMinutes?.confidenceBand ?? sleep.hrv?.confidenceBand ?? .high
                 ))
             }
@@ -188,9 +205,9 @@ final class TodayViewModel {
         }
         if entry == nil {
             if UserDefaults.standard.bool(forKey: "source.healthKit") {
-                return "No live Apple Health samples in today's ledger yet. Pull to refresh after Apple Watch syncs."
+                return "No fresh source data yet. Pull to refresh."
             }
-            return "Apple Health is not connected. No placeholder metrics are shown."
+            return "Connect sources in Settings. No placeholder metrics are shown."
         }
         guard let lastSyncedAt else {
             return "Sync pending. Coverage today \(coverage)%."

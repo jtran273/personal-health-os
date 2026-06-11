@@ -9,12 +9,20 @@ protocol RecentHealthIngesting {
     func ingestRecent(days: Int) async throws -> DailyLedgerEntry?
 }
 
+/// Oura-specific recent-ingest seam so view models can sync Oura without the concrete service.
+protocol RecentOuraIngesting {
+    func ingestRecent(days: Int) async throws -> DailyLedgerEntry?
+}
+
 extension HealthKitService: HealthKitAuthorizing {}
 extension HealthKitIngestor: RecentHealthIngesting {}
+extension OuraIngestor: RecentOuraIngesting {}
 
 @Observable
 final class SourcesViewModel {
     var isOuraConfigured: Bool
+    var ouraStatus: SourceConnectionStatus
+    var ouraMessage: String?
     var healthKitStatus: SourceConnectionStatus
     var healthKitMessage: String?
     var recentEntries: [DailyLedgerEntry] = []
@@ -22,17 +30,24 @@ final class SourcesViewModel {
     private var sawAppleWatchMetricThisSession = false
     private let healthKitService: any HealthKitAuthorizing
     private let healthKitIngestor: (any RecentHealthIngesting)?
+    private let ouraIngestor: (any RecentOuraIngesting)?
     private let store: (any LedgerStore)?
+    private let isOuraTokenConfigured: () -> Bool
 
     init(
         healthKitService: any HealthKitAuthorizing,
         healthKitIngestor: (any RecentHealthIngesting)? = nil,
-        store: (any LedgerStore)? = nil
+        ouraIngestor: (any RecentOuraIngesting)? = nil,
+        store: (any LedgerStore)? = nil,
+        isOuraTokenConfigured: @escaping () -> Bool = { OuraTokenStore.shared.isConfigured }
     ) {
         self.healthKitService = healthKitService
         self.healthKitIngestor = healthKitIngestor
+        self.ouraIngestor = ouraIngestor
         self.store = store
-        self.isOuraConfigured = OuraTokenStore.shared.isConfigured
+        self.isOuraTokenConfigured = isOuraTokenConfigured
+        self.isOuraConfigured = isOuraTokenConfigured()
+        self.ouraStatus = isOuraTokenConfigured() ? .connectedNoData : .available
         self.healthKitStatus = UserDefaults.standard.bool(forKey: "source.healthKit") ? .connectedNoData : .available
     }
 
@@ -45,12 +60,12 @@ final class SourcesViewModel {
 
     var coverageSentence: String {
         if healthKitStatus == .connectedNoData {
-            return "Apple Health permission is set; waiting for readable Apple Watch samples."
+            return "Apple Health is connected. Waiting for fresh bridge data."
         }
         if healthKitStatus != .connected {
-            return "Apple Health would add Apple Watch sleep, HRV, movement, and weight if available."
+            return "Oura recovery, scale weight, meals, and Apple Health gaps."
         }
-        return "Recent ledger rows are present. Check Today and Body for source, freshness, and confidence per metric."
+        return "Recent source rows are in the ledger."
     }
 
     var connectedSources: [BodySource] {
@@ -71,15 +86,10 @@ final class SourcesViewModel {
 
     var routingRows: [MetricRouteRow] {
         [
-            MetricRouteRow(metric: "Sleep + HRV", source: "Apple Watch", reason: "primary during 14-day Apple Health trial"),
-            MetricRouteRow(metric: "Resting HR", source: "Apple Watch", reason: "primary recovery context through Apple Health"),
-            MetricRouteRow(metric: "Respiratory rate", source: "Apple Watch", reason: "optional Apple Health signal when readable"),
-            MetricRouteRow(metric: "Wrist temperature", source: "Apple Watch", reason: "optional overnight signal if HealthKit exposes it"),
-            MetricRouteRow(metric: "Steps", source: "Apple Watch", reason: "watch first, iPhone fallback"),
-            MetricRouteRow(metric: "Active calories", source: "Apple Watch", reason: "directional only; weight trend recalibrates"),
-            MetricRouteRow(metric: "Workouts", source: "Apple Health", reason: "exercise context during the trial"),
-            MetricRouteRow(metric: "Weight", source: "Scale/manual", reason: "Apple Health weight only when present"),
-            MetricRouteRow(metric: "Food intake", source: "OpenClaw", reason: "meal photos + known foods")
+            MetricRouteRow(metric: "Sleep + recovery", source: "Oura", reason: "primary recovery source"),
+            MetricRouteRow(metric: "Movement", source: "Apple Health", reason: "steps, workouts, active energy"),
+            MetricRouteRow(metric: "Weight", source: "Scale", reason: "trend anchor for calorie math"),
+            MetricRouteRow(metric: "Food", source: "Meals", reason: "calories and protein")
         ]
     }
 
@@ -112,31 +122,51 @@ final class SourcesViewModel {
 
         return [
             AppleHealthPilotRow(
-                title: "Health permissions",
+                title: "Apple Health bridge",
                 status: permissionStatus,
-                detail: "Sleep, HRV, resting HR, respiratory rate, wrist temperature, steps, active energy, workouts, and weight. iOS hides exact read grants, so verify toggles in Health > Sharing > Apps > BodyOS."
+                detail: "Optional movement and Health app data."
             ),
             AppleHealthPilotRow(
                 title: "Data freshness",
                 status: freshnessStatus,
-                detail: healthKitStatus == .connected ? "Recent Apple Health samples synced into the ledger." : "Connect, then refresh after a sleep/workout/day of watch wear."
+                detail: healthKitStatus == .connected ? "Fresh bridge data is in the ledger." : "Connect, then refresh after activity or Health sync."
             ),
             AppleHealthPilotRow(
-                title: "Apple Watch source",
+                title: "Dedupe",
                 status: appleWatchStatus,
-                detail: "Live pilot data should come from Apple Watch / Apple Health, not placeholder rows."
+                detail: "Oura wins recovery. Apple Health fills movement and gaps."
             ),
             AppleHealthPilotRow(
                 title: "Sample/dev data",
                 status: .sample,
-                detail: "Simulator and preview data are treated as demo-only; use James's iPhone for the 14-day trial."
+                detail: "Simulator data is demo-only."
             ),
             AppleHealthPilotRow(
-                title: "Oura fallback",
-                status: .dormant,
-                detail: isOuraConfigured ? "Token is saved, but auto-sync stays off unless explicitly re-enabled." : "No Oura token required for the Apple Watch loop."
+                title: "Oura",
+                status: ouraPilotStatus,
+                detail: ouraPilotDetail
             )
         ]
+    }
+
+    private var ouraPilotStatus: AppleHealthPilotRow.Status {
+        switch ouraStatus {
+        case .connected: return .live
+        case .connectedNoData: return .waiting
+        case .pending: return .checking
+        case .available: return .missing
+        case .disabled: return .dormant
+        }
+    }
+
+    private var ouraPilotDetail: String {
+        switch ouraStatus {
+        case .connected: return "Primary recovery source connected."
+        case .connectedNoData: return "Token works. Waiting for first night of ring data."
+        case .pending: return "Syncing Oura."
+        case .available: return "Connect Oura for recovery."
+        case .disabled: return "Oura is off."
+        }
     }
 
     func connectHealthKit() async {
@@ -153,7 +183,7 @@ final class SourcesViewModel {
             }
             if entry?.hasHealthKitBackedMetric != true {
                 healthKitStatus = .connectedNoData
-                healthKitMessage = "Permission set; no recent Apple Health samples"
+                healthKitMessage = "Connected; waiting for data"
             } else {
                 healthKitStatus = .connected
                 healthKitMessage = "Synced just now"
@@ -166,20 +196,65 @@ final class SourcesViewModel {
         }
     }
 
+    /// Re-run the Oura ingest on demand ("Sync now" affordance on the Oura card).
+    func syncOura() async {
+        await ingestOuraIfConfigured()
+        await refreshLedgerSnapshot()
+        updateOuraStatusFromLedger()
+    }
+
     func refresh() async {
-        isOuraConfigured = OuraTokenStore.shared.isConfigured
-        guard let store else { return }
-        recentEntries = await store.recentEntries(days: 7)
+        await ingestOuraIfConfigured()
+        await refreshLedgerSnapshot()
+        updateOuraStatusFromLedger()
+        guard store != nil else { return }
         guard UserDefaults.standard.bool(forKey: "source.healthKit") else {
             healthKitStatus = .available
             return
         }
         healthKitStatus = hasRecentHealthKitData ? .connected : .connectedNoData
         if healthKitStatus == .connectedNoData {
-            healthKitMessage = "Permission set; no recent Apple Health samples"
-        } else if healthKitMessage == "Permission set; no recent Apple Health samples" || healthKitMessage == "Syncing recent data" {
+            healthKitMessage = "Connected; waiting for data"
+        } else if healthKitMessage == "Connected; waiting for data" || healthKitMessage == "Syncing recent data" {
             healthKitMessage = "Synced just now"
         }
+    }
+
+    /// Ingest recent Oura days when a token exists. No token is a silent no-op (short-circuit),
+    /// and a configured token with zero data is "waiting", never an error or a fake value.
+    private func ingestOuraIfConfigured() async {
+        isOuraConfigured = isOuraTokenConfigured()
+        guard isOuraConfigured, let ouraIngestor else { return }
+        do {
+            _ = try await ouraIngestor.ingestRecent(days: 7)
+            ouraMessage = nil
+        } catch {
+            ouraMessage = "Sync failed. \(error.localizedDescription)"
+        }
+    }
+
+    private func refreshLedgerSnapshot() async {
+        guard let store else { return }
+        recentEntries = await store.recentEntries(days: 7)
+    }
+
+    private func updateOuraStatusFromLedger() {
+        guard isOuraConfigured else {
+            ouraStatus = .available
+            ouraMessage = nil
+            return
+        }
+        ouraStatus = hasRecentOuraData ? .connected : .connectedNoData
+    }
+
+    private var hasRecentOuraData: Bool {
+        recentEntries.contains { $0.hasOuraMetric }
+    }
+
+    private var ouraWeeklyCoverage: Double {
+        guard ouraStatus == .connected else { return 0 }
+        let daysWithOura = recentEntries.filter { $0.hasOuraMetric }.count
+        return Double(daysWithOura) / 7.0
     }
 
     private var recentHealthKitEntries: [DailyLedgerEntry] {
@@ -197,22 +272,22 @@ final class SourcesViewModel {
     private var sourceCards: [BodySource] {
         return [
             BodySource(
+                id: "oura",
+                name: "Oura Ring",
+                role: "sleep, recovery, HRV",
+                status: ouraStatus,
+                coverage: ouraWeeklyCoverage,
+                subline: ouraMessage ?? ouraSubline,
+                systemImage: "circle.dashed"
+            ),
+            BodySource(
                 id: "healthkit",
-                name: "Apple Watch",
-                role: "sleep, hrv, resting hr, steps, active energy",
+                name: "Apple Health",
+                role: "movement, workouts, health gaps",
                 status: healthKitStatus,
                 coverage: Double(weeklyCoverage) / 100.0,
                 subline: healthKitMessage ?? healthKitSubline,
-                systemImage: "applewatch"
-            ),
-            BodySource(
-                id: "oura",
-                name: "Oura Ring",
-                role: "disabled for now",
-                status: .disabled,
-                coverage: 0,
-                subline: isOuraConfigured ? "Token saved, auto-sync off" : "Returned device; kept as fallback",
-                systemImage: "circle.dashed"
+                systemImage: "heart.text.square"
             ),
             BodySource(
                 id: "scale",
@@ -220,29 +295,44 @@ final class SourcesViewModel {
                 role: "weight, trend, body comp",
                 status: .pending,
                 coverage: 0.0,
-                subline: "Withings likely next",
+                subline: "Connect after first weigh-in",
                 systemImage: "scalemass"
             ),
             BodySource(
                 id: "meals",
-                name: "Meal Photos",
-                role: "food intake, protein, known foods",
+                name: "Meals",
+                role: "calories, protein, macros",
                 status: .pending,
                 coverage: 0.0,
-                subline: "Copilot UI built; estimation pending",
-                systemImage: "photo"
+                subline: "Manual now; photos later",
+                systemImage: "fork.knife"
             ),
         ]
+    }
+
+    private var ouraSubline: String {
+        switch ouraStatus {
+        case .connected:
+            return "Primary recovery source"
+        case .connectedNoData:
+            return "Connected; waiting for first night of data"
+        case .pending:
+            return "Syncing"
+        case .available:
+            return "Connect Oura"
+        case .disabled:
+            return "Unavailable"
+        }
     }
 
     private var healthKitSubline: String {
         switch healthKitStatus {
         case .connected:
-            return "Apple Health read access configured"
+            return "Bridge connected"
         case .connectedNoData:
-            return "Permission set; waiting for samples"
+            return "Waiting for data"
         case .pending:
-            return "Requesting Apple Health access"
+            return "Requesting access"
         case .available:
             return "Connect Apple Health"
         case .disabled:
@@ -297,6 +387,16 @@ enum SourceConnectionStatus: String, Equatable {
 }
 
 private extension DailyLedgerEntry {
+    var hasOuraMetric: Bool {
+        sleep?.totalSleepMinutes?.source == .oura ||
+        sleep?.hrv?.source == .oura ||
+        sleep?.restingHR?.source == .oura ||
+        sleep?.readinessScore?.source == .oura ||
+        sleep?.skinTempDelta?.source == .oura ||
+        steps?.source == .oura ||
+        activeCalories?.source == .oura
+    }
+
     var hasHealthKitBackedMetric: Bool {
         hasAppleWatchMetric ||
         steps?.source == .iphone ||

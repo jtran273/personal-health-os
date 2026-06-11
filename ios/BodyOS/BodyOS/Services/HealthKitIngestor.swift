@@ -53,7 +53,8 @@ public final class HealthKitIngestor {
         var entry = await store.entry(for: date) ?? DailyLedgerEntry(date: date)
 
         if let sleep {
-            entry.sleep = sleep
+            // Oura wins sleep/recovery; Apple Health only fills gaps (PRD §6 routing).
+            entry.sleep = HealthDataRouter.mergedRecovery(existing: entry.sleep, incoming: sleep)
         }
         if let stepSample {
             entry.steps = stepSample

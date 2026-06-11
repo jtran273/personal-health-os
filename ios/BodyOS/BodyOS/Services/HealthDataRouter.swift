@@ -3,15 +3,15 @@ import Foundation
 /// Decides the "best source" for each metric type given which sources are
 /// currently available (paired, authorized, syncing).
 ///
-/// Source hierarchy (Apple Watch 14-day trial — source-agnostic ledger):
-///   - Sleep / HRV / Recovery    → Apple Watch → iPhone → Oura only when fallback is explicitly enabled
-///   - Steps                     → Apple Watch → iPhone
-///   - Active calories           → Apple Watch → iPhone (estimated, recalibrated by weight trend)
+/// Source hierarchy (Oura-first with Apple Health bridge):
+///   - Sleep / HRV / Recovery    → Oura → Apple Health → iPhone
+///   - Steps                     → Apple Health → iPhone
+///   - Active calories           → Apple Health → iPhone (estimated, recalibrated by weight trend)
 ///   - Weight                    → Smart Scale → Apple Health weight when present → Manual/OpenClaw prompt
 ///   - Meals                     → Known Food → Meal Photo → Manual → Estimated
 ///
-/// Oura is dormant by default. A configured token should not make Oura an
-/// automatic route; callers must opt into fallback mode before Oura can win.
+/// Apple Health is a bridge, not a separate product destination. When Oura and
+/// Apple Health overlap on recovery, Oura wins to avoid duplicate recovery facts.
 /// Apple Health permission alone also does not make weight passive: the router
 /// only chooses Health-sourced weight after a body-mass sample exists.
 /// If none of the preferred passive sources are available, the router falls
@@ -55,10 +55,48 @@ public final class HealthDataRouter {
     }
 
     private var recoveryPreference: [MetricSource] {
-        allowsDormantOuraFallback ? [.appleWatch, .iphone, .oura] : [.appleWatch, .iphone]
+        allowsDormantOuraFallback ? [.oura, .appleWatch, .iphone] : [.oura, .appleWatch, .iphone]
     }
 
     private func firstAvailable(_ preference: [MetricSource]) -> MetricSource? {
         preference.first { availableSources.contains($0) }
+    }
+
+    // MARK: - Recovery merge
+
+    /// Rank of a source for sleep/recovery metrics; lower wins (Oura first, per PRD §6).
+    public static func recoveryRank(_ source: MetricSource) -> Int {
+        switch source {
+        case .oura: return 0
+        case .appleWatch: return 1
+        case .iphone: return 2
+        default: return 3
+        }
+    }
+
+    /// Merges an incoming sleep/recovery snapshot into the existing one field by field.
+    ///
+    /// Each field keeps the sample from the higher-precedence source (Oura beats Apple Health),
+    /// fills gaps from whichever source has the value, and prefers the incoming sample on ties
+    /// so re-ingesting the same source refreshes data.
+    public static func mergedRecovery(existing: SleepRecovery?, incoming: SleepRecovery) -> SleepRecovery {
+        guard let existing else { return incoming }
+        return SleepRecovery(
+            date: existing.date,
+            totalSleepMinutes: pick(existing: existing.totalSleepMinutes, incoming: incoming.totalSleepMinutes),
+            hrv: pick(existing: existing.hrv, incoming: incoming.hrv),
+            restingHR: pick(existing: existing.restingHR, incoming: incoming.restingHR),
+            readinessScore: pick(existing: existing.readinessScore, incoming: incoming.readinessScore),
+            skinTempDelta: pick(existing: existing.skinTempDelta, incoming: incoming.skinTempDelta)
+        )
+    }
+
+    private static func pick<Value>(
+        existing: MetricSample<Value>?,
+        incoming: MetricSample<Value>?
+    ) -> MetricSample<Value>? {
+        guard let existing else { return incoming }
+        guard let incoming else { return existing }
+        return recoveryRank(incoming.source) <= recoveryRank(existing.source) ? incoming : existing
     }
 }

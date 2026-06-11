@@ -2,28 +2,18 @@ import XCTest
 @testable import BodyOS
 
 final class HealthDataRouterTests: XCTestCase {
-    func testAppleWatchWinsForTrialRecoveryAndActivityEvenWhenOuraTokenExists() {
+    func testOuraWinsRecoveryWhileAppleHealthHandlesMovement() {
         let router = HealthDataRouter(availableSources: [.oura, .appleWatch, .iphone, .manual])
 
-        XCTAssertEqual(router.bestSleepSource(), .appleWatch)
-        XCTAssertEqual(router.bestRecoverySource(), .appleWatch)
+        XCTAssertEqual(router.bestSleepSource(), .oura)
+        XCTAssertEqual(router.bestRecoverySource(), .oura)
         XCTAssertEqual(router.bestStepSource(), .appleWatch)
         XCTAssertEqual(router.bestActiveCalorieSource(), .appleWatch)
         XCTAssertEqual(router.bestWeightSource(), .manual)
     }
 
-    func testOuraTokenAloneDoesNotBecomeAutomaticSleepOrRecoveryRoute() {
+    func testOuraTokenAloneCanDriveSleepAndRecovery() {
         let router = HealthDataRouter(availableSources: [.oura])
-
-        XCTAssertEqual(router.bestSleepSource(), .estimated)
-        XCTAssertEqual(router.bestRecoverySource(), .estimated)
-    }
-
-    func testDormantOuraCanBeExplicitFallbackWhenAppleHealthIsUnavailable() {
-        let router = HealthDataRouter(
-            availableSources: [.oura],
-            allowsDormantOuraFallback: true
-        )
 
         XCTAssertEqual(router.bestSleepSource(), .oura)
         XCTAssertEqual(router.bestRecoverySource(), .oura)

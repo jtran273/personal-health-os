@@ -2,6 +2,20 @@
 
 You are picking up the BodyOS project mid-build. Read this first, then `AGENTS.md`, then the memory bank.
 
+## Update (2026-06-11) — Oura is live again
+
+James got a NEW Oura ring; the new PAT sits in gitignored `BodyOS/Resources/Secrets.plist`, which is bundled again so `OuraTokenStore.shared` resolves it automatically (decision 022 in `memory-bank/decisions.md`).
+
+- `OuraIngestor.ingestRecent(days: 7)` now runs on Today load and on Settings/Sources refresh whenever a token is configured. No token = silent skip.
+- Routing is enforced at merge time: `HealthDataRouter.mergedRecovery` merges sleep/recovery per field with precedence Oura > Apple Health > iPhone, used by both `OuraIngestor` and `HealthKitIngestor`. Oura wins sleep/HRV/resting HR/readiness; Apple Health wins movement (Oura steps/calories only fill gaps); scale/manual wins weight (Oura never touches weight/meals).
+- The Settings tab Oura card has three honest states: connected, "no data" ("Connected; waiting for first night of data" — the current state for the brand-new ring), and available. Card actions: `refresh` = sync now, `manage` = token sheet (`OuraConnectionView`).
+- `OuraReading` is the new test seam (mirrors `HealthKitReading`); see `BodyOSTests/OuraIngestorTests.swift`.
+- Live API verified against the real PAT on 2026-06-11: all endpoints 200 and shapes match; only 1 `daily_stress` record exists. Sleep/readiness/activity rows appear after the first night worn — verify the connected state flips automatically tomorrow morning.
+- Latest test run: **58 tests, 0 failures** (`build/Logs/Test/Test-BodyOS-2026.06.11_01-51-12--0700.xcresult`). Screenshot of the Oura card: `/tmp/bodyos-oura-reenabled.png` (temp file).
+- Caveats: a refresh costs up to 21 Oura API calls (3 endpoints x 7 days); batching by date range is the obvious future optimization. The test host bundles the real token, so view-model tests inject `isOuraTokenConfigured` closures instead of reading the real token store.
+
+The older sections below predate the Apple Watch pivot reversal and the Today / Past / Settings shell; read `memory-bank/active-context.md` for current state.
+
 ## Where things stand (2026-05-21)
 
 The app builds, runs, and tests cleanly on iPhone 17 Pro simulator. The Apple Watch pivot is verified on James's real iPhone: the app installs as `com.jamestran.bodyos`, launches after trusting the developer profile, requests Apple Health permission, and displays real Apple Watch data. Most recent screenshots are `/tmp/bodyos-wrap-final.png`, `/tmp/bodyos-copilot-manual-meal.png`, `/tmp/bodyos-body-persistence-weight.png`, `/tmp/bodyos-weekly-0403.png`, and `/tmp/bodyos-sources-oura-manage.png` (temporary files; assume gone on reboot). Root tabs now cover Today, Copilot, Body, Weekly, and Sources.

@@ -25,9 +25,9 @@ final class TodayViewModelTests: XCTestCase {
 
         XCTAssertNil(viewModel.entry)
         XCTAssertEqual(viewModel.recentEntries.first?.steps?.value, 12_345)
-        XCTAssertEqual(viewModel.modeHeadline, "Waiting for Health data.")
-        XCTAssertEqual(viewModel.oneAction.title, "Refresh Apple Health.")
-        XCTAssertEqual(viewModel.footerText, "No live Apple Health samples in today's ledger yet. Pull to refresh after Apple Watch syncs.")
+        XCTAssertEqual(viewModel.modeHeadline, "Set up sources.")
+        XCTAssertEqual(viewModel.oneAction.title, "Refresh sources.")
+        XCTAssertEqual(viewModel.footerText, "No fresh source data yet. Pull to refresh.")
     }
 
     func testLoadShowsTodayEntryAfterHealthKitIngestWritesCurrentSteps() async throws {
@@ -46,6 +46,85 @@ final class TodayViewModelTests: XCTestCase {
 
         XCTAssertEqual(viewModel.entry?.steps?.value, 4_321)
         XCTAssertEqual(viewModel.entry?.steps?.source, .appleWatch)
+    }
+
+    func testLoadIngestsOuraWhenTokenIsConfigured() async throws {
+        let store = InMemoryLedgerStore()
+        let today = Calendar.current.startOfDay(for: Date())
+        let ouraEntry = DailyLedgerEntry(
+            date: today,
+            sleep: SleepRecovery(
+                date: today,
+                totalSleepMinutes: MetricSample(value: 432, source: .oura, confidence: 0.85),
+                readinessScore: MetricSample(value: 81, source: .oura, confidence: 0.8)
+            ),
+            coverageScore: 0.2
+        )
+        let ouraIngestor = MockRecentOuraIngestor(entry: ouraEntry, store: store)
+
+        let viewModel = TodayViewModel(
+            store: store,
+            ouraIngestor: ouraIngestor,
+            isOuraTokenConfigured: { true }
+        )
+        await viewModel.load()
+
+        XCTAssertEqual(ouraIngestor.requestedDays, 7)
+        XCTAssertEqual(viewModel.entry?.sleep?.totalSleepMinutes?.source, .oura)
+        XCTAssertEqual(viewModel.entry?.sleep?.readinessScore?.value, 81)
+        XCTAssertNil(viewModel.lastSyncError)
+    }
+
+    func testLoadSkipsOuraWithoutToken() async {
+        let store = InMemoryLedgerStore()
+        let ouraIngestor = MockRecentOuraIngestor(entry: nil, store: nil)
+
+        let viewModel = TodayViewModel(
+            store: store,
+            ouraIngestor: ouraIngestor,
+            isOuraTokenConfigured: { false }
+        )
+        await viewModel.load()
+
+        XCTAssertNil(ouraIngestor.requestedDays)
+        XCTAssertNil(viewModel.entry)
+        XCTAssertNil(viewModel.lastSyncError)
+    }
+
+    func testLoadWithTokenButEmptyRingShowsSetupNotError() async {
+        let store = InMemoryLedgerStore()
+        let ouraIngestor = MockRecentOuraIngestor(entry: nil, store: nil)
+
+        let viewModel = TodayViewModel(
+            store: store,
+            ouraIngestor: ouraIngestor,
+            isOuraTokenConfigured: { true }
+        )
+        await viewModel.load()
+
+        XCTAssertEqual(ouraIngestor.requestedDays, 7)
+        XCTAssertNil(viewModel.entry)
+        XCTAssertNil(viewModel.lastSyncError)
+        XCTAssertEqual(viewModel.modeHeadline, "Set up sources.")
+    }
+}
+
+private final class MockRecentOuraIngestor: RecentOuraIngesting {
+    private let entry: DailyLedgerEntry?
+    private let store: (any LedgerStore)?
+    private(set) var requestedDays: Int?
+
+    init(entry: DailyLedgerEntry?, store: (any LedgerStore)?) {
+        self.entry = entry
+        self.store = store
+    }
+
+    func ingestRecent(days: Int) async throws -> DailyLedgerEntry? {
+        requestedDays = days
+        if let entry, let store {
+            await store.upsert(entry)
+        }
+        return entry
     }
 }
 

@@ -13,6 +13,30 @@ Format:
 
 ---
 
+## 022 — Oura re-enabled as the live primary recovery source (2026-06-11)
+**Context:** Decision 015 made Oura dormant after James returned his old ring; decision 020 already declared Oura-first recovery routing in principle. Tonight James got a new Oura ring and put the new PAT in gitignored `Secrets.plist`. The ring is brand new, so the API returns almost no data until the first night is worn.
+**Decision:** Wire `OuraIngestor` into Today load and Sources refresh behind `OuraTokenStore.isConfigured`. Enforce routing at merge time: a shared `HealthDataRouter.mergedRecovery` merges sleep/recovery per field with Oura > Apple Health > iPhone (used by both ingestors), Oura movement only fills days without Apple Health movement, and Oura never writes weight/meals. A configured token with zero data renders as "connected, waiting for first night of data" — not an error, never fake values. Re-bundle `Secrets.plist` (still gitignored) so the PAT resolves automatically in local builds; Keychain via `OuraConnectionView` remains the managed path.
+**Why:** The hardware exists again, and the previously declared Oura-first routing was aspirational — `HealthKitIngestor` would have clobbered Oura sleep, and `OuraIngestor` would have clobbered Apple Watch steps. Field-level merge keeps one recovery truth (Oura) while letting Apple Health fill gaps like HRV when Oura lacks a field. Bundling the local secrets file removes a manual token-paste step on every reinstall for a single-user app.
+**Consequences:** Each Today/Sources refresh makes up to 21 Oura API calls (3 endpoints × 7 days) — fine for personal use under Oura rate limits, but batch-by-range is the obvious optimization later. The test host now contains a real token, so view-model tests must inject `isOuraTokenConfigured` instead of relying on the real token store. Local archive builds embed the PAT; do not distribute built .app bundles.
+
+## 021 — Tide is the product brand; BodyOS remains the internal module/protocol namespace (2026-06-10)
+**Context:** James provided a Claude Designer handoff with the Tide name, roundel mark, app icon guidance, and body-mode waterline behavior.
+**Decision:** Adopt Tide as the visible product name (`CFBundleDisplayName`, app copy, app icon, SwiftUI brand components, and assistant export `device.app`). Keep the Xcode target/module/build product and existing web route/payload kind names as `BodyOS` / `bodyos.*` for now.
+**Why:** The visible app should match the new brand immediately, but renaming the Swift module, bundle id, routes, and bridge protocol would create high-risk churn late in the session. Keeping `BodyOS` as an internal namespace preserves tests, scripts, install paths, and existing OpenClaw bridge compatibility.
+**Consequences:** New user-facing UI should say Tide. New reusable brand UI should use `TideMark`, `TideLockup`, or `AppBrand.name`. Internal imports, target names, bundle id `com.jamestran.bodyos`, and route kinds can remain BodyOS until a deliberate migration is worth it.
+
+## 020 — Primary app shell is Today / Past / Settings with Oura-first recovery routing (2026-06-10)
+**Context:** James reviewed the app in Simulator and found the five-tab UI too text-heavy and fragmented. He clarified that Oura should be the main source, Apple Health should coexist as a bridge without duplicate recovery facts, and the app should focus on one simple health/weight-loss dashboard.
+**Decision:** Collapse primary navigation to Today, Past, and Settings. Keep Meals and Body Ledger code as supporting flows, but remove them from top-level navigation. Route sleep/recovery to Oura first, use Apple Health for movement/workouts/gaps, and keep scale/manual as the weight anchor.
+**Why:** The app's job is daily health management with low cognitive load, not a set of separate product surfaces. Oura and Apple Health should not compete for the same recovery slot; source routing should pick one recovery truth and use the other as gap-fill where appropriate.
+**Consequences:** The visible app is simpler immediately. Full raw-sample dedupe across Oura and Apple Health still needs real Oura + Apple Health overlap data, but the first-pass routing now prevents duplicate recovery facts in the UI.
+
+## 019 — Withings scale ingestion follows notification fetch semantics and provider units (2026-06-10)
+**Context:** James is getting an Oura ring and smart scale, and PR #25 added Oura Ring 5 endpoints plus a Withings webhook.
+**Decision:** Keep the PR's source-agnostic smart-scale event shape, but fetch Withings notification data with a form POST to the Measure API, only treat `appli=1` as the weight/body-composition category, and store Withings type `77` as `waterMassKg` instead of a percentage.
+**Why:** Withings notifications identify body/weight as category 1, and the documented fetch flow uses an `application/x-www-form-urlencoded` Measure API call after notification receipt. Withings type 77 is hydration/water mass in kg; silently normalizing it as a percentage would make downstream calibration and display untrustworthy.
+**Consequences:** The local webhook path is ready for OAuth/token plumbing and real scale testing. Any future UI display of water composition needs to label the unit as kg unless a provider explicitly supplies a percentage.
+
 ## 018 — HealthKit movement and scale reads preserve source class before ingestion (2026-05-21)
 **Context:** Apple Health can contain Apple Watch, iPhone, Oura-bridged, manual, and future smart-scale samples. The earlier HealthKit reader returned bare movement integers and labeled HealthKit weight as iPhone.
 **Decision:** Return source-attributed `MetricSample<Int>` values for HealthKit steps and active energy, classify HealthKit sample metadata into `MetricSource` where possible, and add a pure `WeightTrendService` for 7/14/28-day trend and calorie-calibration math.

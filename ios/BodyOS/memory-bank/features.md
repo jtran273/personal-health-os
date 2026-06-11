@@ -16,6 +16,62 @@ Status legend: `requested` · `in-progress` · `shipped` · `deferred`
 
 ## Shipped — additions
 
+### Oura re-enabled as a live source for the new ring (2026-06-11)
+**Ask:** James got a new Oura ring tonight (new PAT already in gitignored `Secrets.plist`). Re-enable the dormant Oura path end to end: live ingestion on refresh, honest Sources card states, and router-respecting merges.
+
+**Delivered:**
+- `OuraIngestor` now runs on Today load and Sources refresh (`ingestRecent(days: 7)`) whenever `OuraTokenStore.shared.isConfigured`; no token is a silent short-circuit.
+- New `OuraReading` protocol seam (mirrors `HealthKitReading`) so Oura ingestion is unit-testable; `OuraService` conforms.
+- Precedence-aware merging: `HealthDataRouter.mergedRecovery` merges sleep/recovery field-by-field with Oura > Apple Health > iPhone, so Oura wins sleep/HRV/resting HR/readiness while Apple Health can still fill gaps. Oura movement only fills days with no Apple Health movement; Oura never touches weight or meals.
+- `HealthKitIngestor` sleep writes now go through the same merge, so Apple Health no longer clobbers Oura recovery.
+- Sources/Settings tab Oura card now has three honest states: connected (Oura-sourced rows in the last 7 days), connectedNoData ("Connected; waiting for first night of data" — brand-new ring, no error, no fake values), available (no token). Card gains "refresh" (sync now) + "manage" (token sheet) affordances.
+- `SettingsView`'s stale "Oura — Disabled" row replaced with a status row linking to `OuraConnectionView`.
+- `Secrets.plist` is bundled again (still gitignored) so the PAT resolves automatically in local builds.
+- Verified `OuraService` request shapes against the live v2 API (Bearer, `start_date`/`end_date`, `{data, next_token}`): all 200s, 0 sleep/readiness/activity records yet (1 daily_stress) — exactly the connectedNoData case.
+- Tests: new `OuraIngestorTests` (Oura wins recovery over Apple Watch, movement gap-fill only, empty-ring no-op, weight/meals untouched), Apple-fills-gaps test in `HealthKitIngestorTests`, Oura status/short-circuit/error tests in `SourcesViewModelTests` and `TodayViewModelTests`. Suite: 58 tests, 0 failures.
+
+### Tide branding and reusable roundel components (2026-06-10)
+**Ask:** Integrate the Claude Designer logo/branding handoff, update the app name, make the branding reusable, and animate it like the current circle.
+
+**Delivered:**
+- Adopted **Tide** as the visible app/product name while keeping `BodyOS` as the internal Swift target/module and bridge namespace.
+- Replaced the placeholder logo with reusable SwiftUI `TideMark`, `TideLockup`, and `AppBrand` components.
+- Rebuilt Today's body-mode hero as the Tide roundel: a circle basin with an animated mode-colored waterline/fill.
+- Generated the iOS app icon set from the Tide roundel spec and updated `CFBundleDisplayName` / permission copy to Tide.
+- Saved the canonical `tide-mark.svg` into the repo design handoff.
+- Updated the OpenClaw bridge validator to accept Tide exports while preserving the existing `bodyos.openclaw.health.daily_export` protocol kind.
+
+### Daily weight preview and setup checklist (2026-06-10)
+**Ask:** Show a daily weight view with up/down movement, add fake data quickly for preview, and include an onboarding/setup flow.
+
+**Delivered:**
+- Added a compact **Daily weight** card at the top of Past with seven rows, per-day deltas, and down/up direction indicators.
+- Added clearly labeled preview-only sample scale data when the ledger is empty; it does not write fake rows to the store.
+- Kept calorie calibration below the weight card so the app still connects weight movement to net over/under.
+- Added a concise Settings setup checklist: connect Oura, weigh in, and log the first meal.
+- Verified iOS tests and simulator screenshots for Past and Settings.
+
+### Simpler Today-first UX and Oura-first source model (2026-06-10)
+**Ask:** Make the app simpler, less text-heavy, and focused on one main health/weight-loss dashboard. Oura should be the main source; Apple Health should coexist without duplicating Oura.
+
+**Delivered:**
+- Collapsed primary navigation from five tabs to **Today / Past / Settings**.
+- Removed Meals and Body from top-level navigation while keeping meal and weight entry reachable from Today.
+- Tightened Today copy, shortened the hero, moved metrics up, and replaced passive "Plan it / Why this?" actions with `Log meal` and `Log weight`.
+- Reframed Sources as Settings with concise cards for Oura, Apple Health, smart scale, and meals.
+- Changed recovery routing so Oura wins sleep/recovery while Apple Health remains the movement/gap bridge.
+- Updated tests for the Oura-first routing and concise source status language.
+
+### Oura Ring 5 + Withings smart-scale readiness (2026-06-10)
+**Ask:** Get the app ready before James gets access to Oura and a smart scale tonight.
+
+**Delivered:**
+- Merged the hardware-readiness branch locally: Oura Ring 5 collection functions, smart-scale provider parsing, Withings webhook route, live OpenClaw summary persistence, web cockpit polish, iOS Meals/Sources polish, and app icon assets.
+- Added route-level Withings webhook tests covering unsupported notification categories, form POST fetch shape, and invalid configured HMAC rejection.
+- Corrected Withings ingestion to fetch Measure API data with a form POST after `appli=1` body/weight notifications.
+- Corrected Withings type `77` normalization from water percentage to water mass in kg (`waterMassKg`) so provider units stay honest.
+- Verified root checks, API smoke, iOS simulator tests, and Simulator launch on the Sources setup screen.
+
 ### Apple Watch pilot permissions + source status clarity (2026-05-22)
 **Ask:** Make the 14-day Apple Watch / Apple Health pilot clear and usable without Oura.
 

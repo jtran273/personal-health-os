@@ -88,6 +88,35 @@ final class HealthKitIngestorTests: XCTestCase {
         XCTAssertEqual(result?.activeCalories?.confidence, 0.35)
     }
 
+    func testAppleHealthSleepFillsGapsWithoutOverridingOuraRecovery() async throws {
+        let store = InMemoryLedgerStore()
+        let calendar = Calendar.current
+        let day = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 6, day: 11)))
+        let ouraSleep = SleepRecovery(
+            date: day,
+            totalSleepMinutes: MetricSample(value: 432, source: .oura, confidence: 0.85),
+            readinessScore: MetricSample(value: 81, source: .oura, confidence: 0.8)
+        )
+        await store.upsert(DailyLedgerEntry(date: day, sleep: ouraSleep))
+
+        let appleSleep = SleepRecovery(
+            date: day,
+            totalSleepMinutes: MetricSample(value: 405, source: .appleWatch, confidence: 0.75),
+            hrv: MetricSample(value: 41.0, source: .appleWatch, confidence: 0.7)
+        )
+        let healthKit = MockHealthKitReader(sleep: appleSleep)
+
+        let result = try await HealthKitIngestor(healthKit: healthKit, store: store).ingest(date: day)
+
+        // Oura keeps the fields it has; Apple Health only fills the HRV gap.
+        XCTAssertEqual(result?.sleep?.totalSleepMinutes?.value, 432)
+        XCTAssertEqual(result?.sleep?.totalSleepMinutes?.source, .oura)
+        XCTAssertEqual(result?.sleep?.readinessScore?.value, 81)
+        XCTAssertEqual(result?.sleep?.readinessScore?.source, .oura)
+        XCTAssertEqual(result?.sleep?.hrv?.value, 41.0)
+        XCTAssertEqual(result?.sleep?.hrv?.source, .appleWatch)
+    }
+
     func testSmartScaleWeightCanReplacePhoneHealthWeight() async throws {
         let store = InMemoryLedgerStore()
         let calendar = Calendar.current

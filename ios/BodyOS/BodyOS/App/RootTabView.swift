@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Root tab bar wiring the four primary tabs of BodyOS.
+/// Root tab bar for the simplified BodyOS app shell.
 struct RootTabView: View {
     @Environment(\.appDependencies) private var dependencies
     @State private var selectedTab: RootTab = RootTab.initial
@@ -9,7 +9,8 @@ struct RootTabView: View {
         TabView(selection: $selectedTab) {
             TodayView(viewModel: TodayViewModel(
                 store: dependencies.ledgerStore,
-                healthKitIngestor: dependencies.healthKitIngestor
+                healthKitIngestor: dependencies.healthKitIngestor,
+                ouraIngestor: dependencies.ouraIngestor
             ), mealsViewModel: MealsViewModel(
                 store: dependencies.ledgerStore,
                 mealLogService: dependencies.mealLogService,
@@ -23,40 +24,21 @@ struct RootTabView: View {
                 .tabItem { Label("Today", systemImage: "house") }
                 .tag(RootTab.today)
 
-            MealsView(viewModel: MealsViewModel(
-                store: dependencies.ledgerStore,
-                mealLogService: dependencies.mealLogService,
-                deficitEstimator: dependencies.deficitEstimator,
-                bodyModeEngine: dependencies.bodyModeEngine
-            ))
-                .tabItem { Label("Meals", systemImage: "fork.knife") }
-                .tag(RootTab.meals)
-
-            BodyLedgerView(viewModel: BodyLedgerViewModel(
-                store: dependencies.ledgerStore,
-                healthKitIngestor: dependencies.healthKitIngestor
-            ), weightViewModel: WeightViewModel(
-                store: dependencies.ledgerStore,
-                weightService: dependencies.weightService,
-                bodyModeEngine: dependencies.bodyModeEngine
-            ))
-                .tabItem { Label("Body", systemImage: "list.bullet.rectangle") }
-                .tag(RootTab.body)
-
             WeeklyReviewView(viewModel: WeeklyReviewViewModel(
                 store: dependencies.ledgerStore,
                 healthKitIngestor: dependencies.healthKitIngestor
             ))
-                .tabItem { Label("Weekly", systemImage: "chart.bar") }
-                .tag(RootTab.weekly)
+                .tabItem { Label("Past", systemImage: "chart.line.uptrend.xyaxis") }
+                .tag(RootTab.past)
 
             SourcesView(viewModel: SourcesViewModel(
                 healthKitService: dependencies.healthKitService,
                 healthKitIngestor: dependencies.healthKitIngestor,
+                ouraIngestor: dependencies.ouraIngestor,
                 store: dependencies.ledgerStore
             ))
-                .tabItem { Label("Sources", systemImage: "point.3.connected.trianglepath.dotted") }
-                .tag(RootTab.sources)
+                .tabItem { Label("Settings", systemImage: "slider.horizontal.3") }
+                .tag(RootTab.settings)
         }
         .tint(Theme.textPrimary)
     }
@@ -64,10 +46,8 @@ struct RootTabView: View {
 
 private enum RootTab: Hashable {
     case today
-    case meals
-    case body
-    case weekly
-    case sources
+    case past
+    case settings
 
     static var initial: RootTab {
         let args = ProcessInfo.processInfo.arguments
@@ -76,10 +56,8 @@ private enum RootTab: Hashable {
             return .today
         }
         switch args[index + 1] {
-        case "meals": return .meals
-        case "body": return .body
-        case "weekly": return .weekly
-        case "sources": return .sources
+        case "weekly", "past": return .past
+        case "sources", "settings": return .settings
         default: return .today
         }
     }
