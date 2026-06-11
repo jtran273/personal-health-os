@@ -23,7 +23,7 @@ test("applySmartScaleEvents: populates bodyComposition from withings body_compos
         bodyFatPercent: 20,
         muscleMassKg: 58,
         boneMassKg: 3.2,
-        waterPercent: 55,
+        waterMassKg: 55,
         visceralFatIndex: 8
       }
     })
@@ -35,7 +35,7 @@ test("applySmartScaleEvents: populates bodyComposition from withings body_compos
   assert.equal(ledger.bodyComposition!.bodyFatPercentage?.value, 20);
   assert.equal(ledger.bodyComposition!.muscleMassKg?.value, 58);
   assert.equal(ledger.bodyComposition!.boneMassKg?.value, 3.2);
-  assert.equal(ledger.bodyComposition!.waterPercentage?.value, 55);
+  assert.equal(ledger.bodyComposition!.waterMassKg?.value, 55);
   assert.equal(ledger.bodyComposition!.visceralFatIndex?.value, 8);
 });
 
@@ -52,7 +52,7 @@ test("applySmartScaleEvents: partial body comp fields are populated correctly", 
   assert.equal(ledger.bodyComposition!.bodyFatPercentage?.value, 22);
   assert.equal(ledger.bodyComposition!.muscleMassKg?.value, 56);
   assert.equal(ledger.bodyComposition!.boneMassKg, undefined);
-  assert.equal(ledger.bodyComposition!.waterPercentage, undefined);
+  assert.equal(ledger.bodyComposition!.waterMassKg, undefined);
 });
 
 test("applySmartScaleEvents: source is preserved on MetricValue", () => {

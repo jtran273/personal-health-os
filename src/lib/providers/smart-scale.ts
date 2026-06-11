@@ -6,7 +6,7 @@ export interface SmartScaleBodyMeasurement {
   body_fat_percent?: number;
   muscle_mass_kg?: number;
   bone_mass_kg?: number;
-  water_percent?: number;
+  water_mass_kg?: number;
   visceral_fat_index?: number;
   measured_at: string;
   source_device?: string;
@@ -48,7 +48,7 @@ function withingsValue(measure: WithingsMeasure): number {
 const WITHINGS_TYPE_WEIGHT = 1;
 const WITHINGS_TYPE_FAT_PERCENT = 6;
 const WITHINGS_TYPE_MUSCLE_MASS = 76;
-const WITHINGS_TYPE_WATER_PERCENT = 77;
+const WITHINGS_TYPE_WATER_MASS = 77;
 const WITHINGS_TYPE_BONE_MASS = 88;
 const WITHINGS_TYPE_VISCERAL_FAT = 170;
 
@@ -75,8 +75,8 @@ export function parseWithingsMeasureGroup(grp: WithingsMeasureGroup): SmartScale
   const boneMeasure = byType.get(WITHINGS_TYPE_BONE_MASS);
   if (boneMeasure) result.bone_mass_kg = withingsValue(boneMeasure);
 
-  const waterMeasure = byType.get(WITHINGS_TYPE_WATER_PERCENT);
-  if (waterMeasure) result.water_percent = withingsValue(waterMeasure);
+  const waterMeasure = byType.get(WITHINGS_TYPE_WATER_MASS);
+  if (waterMeasure) result.water_mass_kg = withingsValue(waterMeasure);
 
   const visceralMeasure = byType.get(WITHINGS_TYPE_VISCERAL_FAT);
   if (visceralMeasure) result.visceral_fat_index = withingsValue(visceralMeasure);
@@ -107,7 +107,7 @@ export function formatSmartScaleMeasurementAsEvents(
     measurement.body_fat_percent !== undefined ||
     measurement.muscle_mass_kg !== undefined ||
     measurement.bone_mass_kg !== undefined ||
-    measurement.water_percent !== undefined ||
+    measurement.water_mass_kg !== undefined ||
     measurement.visceral_fat_index !== undefined;
 
   if (hasBodyComp) {
@@ -121,7 +121,7 @@ export function formatSmartScaleMeasurementAsEvents(
         bodyFatPercent: measurement.body_fat_percent,
         muscleMassKg: measurement.muscle_mass_kg,
         boneMassKg: measurement.bone_mass_kg,
-        waterPercent: measurement.water_percent,
+        waterMassKg: measurement.water_mass_kg,
         visceralFatIndex: measurement.visceral_fat_index
       }
     };

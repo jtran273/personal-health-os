@@ -39,7 +39,7 @@ export interface BodyComposition {
   bodyFatPercentage?: MetricValue<number>;
   muscleMassKg?: MetricValue<number>;
   boneMassKg?: MetricValue<number>;
-  waterPercentage?: MetricValue<number>;
+  waterMassKg?: MetricValue<number>;
   visceralFatIndex?: MetricValue<number>;
 }
 

@@ -39,7 +39,7 @@ test("parseWithingsMeasureGroup: full body composition group", () => {
   assert.equal(result!.body_fat_percent, 20);
   assert.equal(result!.muscle_mass_kg, 58);
   assert.equal(result!.bone_mass_kg, 3.2);
-  assert.equal(result!.water_percent, 55);
+  assert.equal(result!.water_mass_kg, 55);
   assert.equal(result!.visceral_fat_index, 8);
 });
 
@@ -61,7 +61,7 @@ test("parseWithingsMeasureGroup: missing optional fields are undefined", () => {
   assert.equal(result!.body_fat_percent, 18);
   assert.equal(result!.muscle_mass_kg, undefined);
   assert.equal(result!.bone_mass_kg, undefined);
-  assert.equal(result!.water_percent, undefined);
+  assert.equal(result!.water_mass_kg, undefined);
   assert.equal(result!.visceral_fat_index, undefined);
 });
 

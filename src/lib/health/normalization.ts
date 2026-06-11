@@ -137,13 +137,13 @@ function applySmartScaleEvents(
   const bodyFat = readNumber(latest.payload, "bodyFatPercent");
   const muscle = readNumber(latest.payload, "muscleMassKg");
   const bone = readNumber(latest.payload, "boneMassKg");
-  const water = readNumber(latest.payload, "waterPercent");
+  const water = readNumber(latest.payload, "waterMassKg");
   const visceral = readNumber(latest.payload, "visceralFatIndex");
 
   if (bodyFat !== undefined) bodyComp.bodyFatPercentage = metric(bodyFat, latest.source, "high");
   if (muscle !== undefined) bodyComp.muscleMassKg = metric(muscle, latest.source, "high");
   if (bone !== undefined) bodyComp.boneMassKg = metric(bone, latest.source, "high");
-  if (water !== undefined) bodyComp.waterPercentage = metric(water, latest.source, "high");
+  if (water !== undefined) bodyComp.waterMassKg = metric(water, latest.source, "high");
   if (visceral !== undefined) bodyComp.visceralFatIndex = metric(visceral, latest.source, "medium");
 
   if (Object.keys(bodyComp).length > 0) ledger.bodyComposition = bodyComp;

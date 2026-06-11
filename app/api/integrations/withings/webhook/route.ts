@@ -9,7 +9,6 @@ import {
 } from "@/lib/providers/smart-scale";
 
 const WITHINGS_APPLI_BODY = 1;
-const WITHINGS_APPLI_ACTIVITY = 4;
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,7 +31,7 @@ export async function POST(request: NextRequest) {
       appli: Number(params.get("appli") ?? "-1")
     };
 
-    if (payload.appli !== WITHINGS_APPLI_BODY && payload.appli !== WITHINGS_APPLI_ACTIVITY) {
+    if (payload.appli !== WITHINGS_APPLI_BODY) {
       return NextResponse.json({ ok: true, eventsWritten: 0 });
     }
 
@@ -44,9 +43,19 @@ export async function POST(request: NextRequest) {
 
     let getMeasData: WithingsGetmeasResponse;
     try {
-      const url = `https://wbsapi.withings.net/measure?action=getmeas&userid=${payload.userid}&startdate=${payload.startdate}&enddate=${payload.enddate}&category=1`;
-      const resp = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` }
+      const body = new URLSearchParams({
+        action: "getmeas",
+        startdate: String(payload.startdate),
+        enddate: String(payload.enddate),
+        category: "1"
+      });
+      const resp = await fetch("https://wbsapi.withings.net/measure", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body
       });
       if (!resp.ok) {
         console.error(`Withings getmeas returned ${resp.status}; acking anyway.`);
