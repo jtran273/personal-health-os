@@ -1,3 +1,5 @@
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import test from "node:test";
 import assert from "node:assert/strict";
 
@@ -24,7 +26,9 @@ test("fetchOuraDailyStress: exported from oura provider", async () => {
 test("oura ring5 collection fetch throws without OURA_PAT", async () => {
   const module = await import("@/lib/providers/oura");
   const originalPat = process.env.OURA_PAT;
+  const originalTokenPath = process.env.OURA_TOKEN_PATH;
   delete process.env.OURA_PAT;
+  process.env.OURA_TOKEN_PATH = join(tmpdir(), "bodyos-oura-ring5-missing", "oura-tokens.json");
 
   try {
     await assert.rejects(
@@ -45,6 +49,11 @@ test("oura ring5 collection fetch throws without OURA_PAT", async () => {
     );
   } finally {
     if (originalPat !== undefined) process.env.OURA_PAT = originalPat;
+    if (originalTokenPath !== undefined) {
+      process.env.OURA_TOKEN_PATH = originalTokenPath;
+    } else {
+      delete process.env.OURA_TOKEN_PATH;
+    }
   }
 });
 

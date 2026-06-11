@@ -3,6 +3,7 @@ import { assertValidDate, buildNormalizedDailyLedger, isValidationError } from "
 import type { RawHealthEventStore } from "@/lib/health/ledger";
 import type { RawHealthEvent } from "@/lib/health";
 import { getDefaultRawHealthEventStore } from "@/lib/health/server-store";
+import { hasOuraCredentials } from "@/lib/providers/oura-oauth";
 import {
   fetchOuraDailyActivity,
   fetchOuraDailyCardiovascularAge,
@@ -37,13 +38,20 @@ async function tryFetch(label: string, fn: () => Promise<RawHealthEvent[]>): Pro
 export async function syncOuraRequest(store: RawHealthEventStore, body: unknown) {
   const parsed = typeof body === "object" && body !== null ? (body as Record<string, unknown>) : {};
   const today = new Date().toISOString().slice(0, 10);
-  const startDate = assertValidDate(parsed.startDate ?? today, "startDate");
-  const endDate = assertValidDate(parsed.endDate ?? startDate, "endDate");
+  const endDate = assertValidDate(parsed.endDate ?? today, "endDate");
+  // Default to a 7-day lookback: Oura finalizes sleep/readiness the morning
+  // after, and inserts are deduped, so re-fetching recent days is safe.
+  const defaultStart = new Date(`${endDate}T00:00:00.000Z`);
+  defaultStart.setUTCDate(defaultStart.getUTCDate() - 6);
+  const startDate = assertValidDate(
+    parsed.startDate ?? defaultStart.toISOString().slice(0, 10),
+    "startDate"
+  );
 
-  if (!process.env.OURA_PAT) {
+  if (!(await hasOuraCredentials())) {
     return {
       synced: false,
-      reason: "OURA_PAT is not configured."
+      reason: "Oura is not connected. Visit /api/integrations/oura/connect to authorize, or set OURA_PAT."
     };
   }
 

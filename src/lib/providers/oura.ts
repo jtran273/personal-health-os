@@ -1,5 +1,6 @@
 import type { RawHealthEvent } from "@/lib/health";
 import { deterministicRawEventId } from "@/lib/health/ledger";
+import { getOuraAccessToken } from "./oura-oauth";
 
 const ouraBaseUrl = "https://api.ouraring.com/v2/usercollection";
 
@@ -64,20 +65,26 @@ async function fetchOuraCollection(
   collection: OuraCollection,
   options: OuraFetchOptions
 ): Promise<RawHealthEvent[]> {
-  const token = options.token ?? process.env.OURA_PAT;
+  const usingInjectedToken = typeof options.token === "string";
+  const token = options.token ?? (await getOuraAccessToken());
   if (!token) {
-    throw new Error("OURA_PAT is required to sync Oura data.");
+    throw new Error(
+      "Oura credentials missing: OURA_PAT is required, or connect via /api/integrations/oura/connect."
+    );
   }
 
   const url = new URL(`${ouraBaseUrl}/${collection}`);
   url.searchParams.set("start_date", options.startDate);
   url.searchParams.set("end_date", options.endDate);
 
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`
+  let response = await fetchOuraWithToken(url, token);
+
+  if (response.status === 401 && !usingInjectedToken) {
+    const refreshedToken = await getOuraAccessToken({ forceRefresh: true }).catch(() => null);
+    if (refreshedToken && refreshedToken !== token) {
+      response = await fetchOuraWithToken(url, refreshedToken);
     }
-  });
+  }
 
   if (!response.ok) {
     throw new Error(`Oura ${collection} fetch failed with ${response.status}.`);
@@ -100,6 +107,14 @@ async function fetchOuraCollection(
     };
 
     return { ...event, id: deterministicRawEventId(event) };
+  });
+}
+
+async function fetchOuraWithToken(url: URL, token: string): Promise<Response> {
+  return fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
   });
 }
 
