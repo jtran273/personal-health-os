@@ -27,7 +27,7 @@ public struct OpenClawHealthExport: Codable, Equatable {
     }
 
     public struct Device: Codable, Equatable {
-        public var app: String = "BodyOS"
+        public var app: String = AppBrand.name
         public var platform: String = "iOS"
         public var healthKitPermission: HealthKitPermission
     }

@@ -1,7 +1,7 @@
 import Foundation
 
-/// The daily "traffic-light" recommendation surfaced on the BodyOS home screen.
-public enum BodyMode: String, Codable, CaseIterable {
+/// The daily recovery recommendation surfaced on the Tide home screen.
+public enum BodyMode: String, Codable, CaseIterable, Equatable {
     case green
     case yellow
     case red

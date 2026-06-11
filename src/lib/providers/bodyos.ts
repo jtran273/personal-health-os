@@ -56,7 +56,7 @@ export interface BodyOSAssistantHealthExport {
   bridgeVersion: string;
   exportedAt: string;
   device: {
-    app: "BodyOS";
+    app: "Tide" | "BodyOS";
     platform: "iOS";
     healthKitPermission: "granted" | "not_granted" | "not_available" | "unknown";
   };
@@ -77,6 +77,7 @@ export interface BodyOSAssistantHandoffResult {
 }
 
 const maxDailySummaries = 14;
+const acceptedAppNames = new Set(["Tide", "BodyOS"]);
 
 export function validateBodyOSAssistantHealthExport(input: unknown, now = new Date()): BodyOSAssistantHandoffResult {
   const errors: string[] = [];
@@ -88,7 +89,7 @@ export function validateBodyOSAssistantHealthExport(input: unknown, now = new Da
   const bridgeVersion = requiredString(payload.bridgeVersion, "bridgeVersion", errors);
   const exportedAt = normalizeIsoDate(payload.exportedAt, "exportedAt", errors);
   const device = toRecord(payload.device);
-  if (device.app !== "BodyOS") errors.push("device.app must be BodyOS.");
+  if (!acceptedAppNames.has(String(device.app))) errors.push("device.app must be Tide.");
   if (device.platform !== "iOS") errors.push("device.platform must be iOS.");
   if (!isHealthKitPermission(device.healthKitPermission)) {
     errors.push("device.healthKitPermission is invalid.");
@@ -118,7 +119,7 @@ export function validateBodyOSAssistantHealthExport(input: unknown, now = new Da
     bridgeVersion,
     exportedAt,
     device: {
-      app: "BodyOS",
+      app: "Tide",
       platform: "iOS",
       healthKitPermission: device.healthKitPermission,
     },
@@ -163,7 +164,7 @@ export function buildLedgerFromBodyOSSummary(
 export function bodyOSAssistantBridgeSafetyMetadata() {
   return {
     ...openClawHealthSafetyMetadata,
-    source: "BodyOS iOS HealthKit ledger export",
+    source: "Tide iOS HealthKit ledger export",
     rawHealthKitSamplesIncluded: false,
     localHandoffAllowed: true,
     networkWritesRequire: "OPENCLAW_HEALTH_TOKEN bearer auth; never include tokens in JSON bodies or commits",
@@ -253,7 +254,7 @@ function toMetric(metric?: BodyOSAssistantMetric<number>): MetricValue<number> |
     value: metric.value,
     source: metric.source,
     confidence: metric.confidence,
-    notes: metric.notes ?? `BodyOS iOS ledger export; observed ${metric.observedAt}, ${metric.freshnessMinutes} minutes fresh.`,
+    notes: metric.notes ?? `Tide iOS ledger export; observed ${metric.observedAt}, ${metric.freshnessMinutes} minutes fresh.`,
   };
 }
 

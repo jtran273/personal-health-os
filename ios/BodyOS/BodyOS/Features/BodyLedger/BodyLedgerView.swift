@@ -125,7 +125,7 @@ struct BodyLedgerView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text("How the ledger works")
                 .kickerStyle()
-            Text("Each metric stores a normalized value, source, and confidence. When sources disagree, BodyOS picks the source best suited to that metric. Low confidence stays visible so weak data does not look certain.")
+            Text("Each metric stores a normalized value, source, and confidence. When sources disagree, Tide picks the source best suited to that metric. Low confidence stays visible so weak data does not look certain.")
                 .font(.custom(Tokens.FontFamily.sansRegular, size: 12.5))
                 .lineSpacing(6)
                 .foregroundStyle(Theme.textSecondary)

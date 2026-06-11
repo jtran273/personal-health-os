@@ -27,7 +27,7 @@ final class OpenClawHealthExportTests: XCTestCase {
         let summary = try XCTUnwrap(export.dailySummaries.first)
 
         XCTAssertEqual(export.kind, "bodyos.openclaw.health.daily_export")
-        XCTAssertEqual(export.device.app, "BodyOS")
+        XCTAssertEqual(export.device.app, "Tide")
         XCTAssertEqual(export.device.platform, "iOS")
         XCTAssertEqual(export.device.healthKitPermission, .granted)
         XCTAssertFalse(export.safety.rawHealthKitSamplesIncluded)

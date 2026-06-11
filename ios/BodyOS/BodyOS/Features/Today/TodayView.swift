@@ -28,11 +28,9 @@ struct TodayView: View {
             VStack(alignment: .leading, spacing: 0) {
                 statusHeader
                 modeHero
-                waitingState
                 oneThingCard
-                openLoopsSection
                 metricsSection
-                timelineSection
+                openLoopsSection
                 footer
             }
             .padding(.bottom, 24)
@@ -56,10 +54,10 @@ struct TodayView: View {
     private var statusHeader: some View {
         HStack(alignment: .bottom) {
             HStack(alignment: .center, spacing: 12) {
-                AppLogoMark(size: .small)
+                AppLogoMark(size: .small, mode: viewModel.activeMode, animates: true)
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("BodyOS")
+                    Text(AppBrand.name)
                         .kickerStyle()
                     Text(Self.dateString(viewModel.entry?.date ?? Date()))
                         .font(.custom(Tokens.FontFamily.serif, size: 26))
@@ -81,7 +79,7 @@ struct TodayView: View {
     private var modeHero: some View {
         VStack(spacing: 6) {
             ZStack {
-                BodyModeOrb(mode: viewModel.activeMode, size: 240)
+                TideMark(mode: viewModel.activeMode, size: 168, style: .mode, animates: true)
                 Text(viewModel.modeHeadline)
                     .font(AppFont.title)
                     .foregroundStyle(Theme.textPrimary)
@@ -91,17 +89,17 @@ struct TodayView: View {
                     .padding(.horizontal, 12)
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 240)
+            .frame(height: 168)
 
             Text(viewModel.modeReason)
                 .font(AppFont.caption)
                 .foregroundStyle(Theme.textSecondary)
                 .multilineTextAlignment(.center)
-                .lineLimit(3)
+                .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, 24)
         }
-        .padding(.top, 20)
+        .padding(.top, 12)
         .padding(.horizontal, 20)
         .padding(.bottom, 8)
     }
@@ -112,7 +110,7 @@ struct TodayView: View {
 
         return VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 8) {
-                Text("The one thing")
+                Text("Next")
                     .kickerStyle(color: Theme.textBody)
                 Rectangle()
                     .fill(Theme.hairline)
@@ -148,9 +146,13 @@ struct TodayView: View {
             }
 
             HStack(spacing: 8) {
-                PrimaryButton(title: "Plan it") {}
-                Button {} label: {
-                    Text("Why this?")
+                PrimaryButton(title: "Log meal") {
+                    showMealSheet = true
+                }
+                Button {
+                    showWeightSheet = true
+                } label: {
+                    Text("Log weight")
                         .font(AppFont.bodyMedium)
                         .foregroundStyle(Theme.textBody)
                         .frame(minHeight: 44)
@@ -183,7 +185,7 @@ struct TodayView: View {
             RoundedRectangle(cornerRadius: Tokens.Radius.card, style: .continuous)
                 .strokeBorder(Theme.hairline, lineWidth: 1)
         )
-        .padding(.top, 20)
+        .padding(.top, 14)
         .padding(.horizontal, 16)
     }
 
@@ -241,14 +243,14 @@ struct TodayView: View {
 
     private var metricsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHead(label: "Today, so far", right: "7 days")
+            SectionHead(label: "Metrics", right: "today")
             LazyVGrid(columns: columns, spacing: 10) {
                 ForEach(metricTiles) { tile in
                     MetricTile(data: tile)
                 }
             }
         }
-        .padding(.top, 24)
+        .padding(.top, 18)
         .padding(.horizontal, 20)
     }
 

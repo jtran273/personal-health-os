@@ -18,7 +18,7 @@ public enum MetricSource: String, Codable, CaseIterable, Hashable {
     public var displayName: String {
         switch self {
         case .oura: return "Oura Ring"
-        case .appleWatch: return "Apple Watch"
+        case .appleWatch: return "Apple Health"
         case .iphone: return "iPhone"
         case .smartScale: return "Smart Scale"
         case .manual: return "Manual Entry"

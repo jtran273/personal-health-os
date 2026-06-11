@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Weekly summary view: calibration, gaps, trend lines, and next-week defaults.
+/// Past summary view: calibration, gaps, trend lines, and next defaults.
 struct WeeklyReviewView: View {
     @State private var viewModel: WeeklyReviewViewModel
 
@@ -13,6 +13,7 @@ struct WeeklyReviewView: View {
             VStack(alignment: .leading, spacing: 0) {
                 header
                 headline
+                weightTrendCard
                 calibrationCard
                 winsAndSlips
                 weekLines
@@ -54,7 +55,7 @@ struct WeeklyReviewView: View {
 
     private var calibrationCard: some View {
         VStack(alignment: .leading, spacing: 0) {
-            WeeklySectionHead(label: "Deficit vs. weight trend")
+            WeeklySectionHead(label: "Calories vs. weight")
                 .padding(.bottom, 4)
 
             HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -99,6 +100,33 @@ struct WeeklyReviewView: View {
         .padding(.horizontal, 16)
     }
 
+    private var weightTrendCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            WeeklySectionHead(label: "Daily weight", right: viewModel.isPreviewData ? "preview" : "scale")
+
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(viewModel.calibrationValue)
+                    .font(.custom(Tokens.FontFamily.serif, size: 38))
+                    .monospacedDigit()
+                    .foregroundStyle(Theme.textPrimary)
+                Text(viewModel.calibrationUnit)
+                    .font(.custom(Tokens.FontFamily.sansRegular, size: 13))
+                    .foregroundStyle(Theme.textSecondary)
+            }
+
+            VStack(spacing: 0) {
+                ForEach(viewModel.dailyWeightRows) { row in
+                    DailyWeightRow(row: row)
+                    if row.id != viewModel.dailyWeightRows.last?.id {
+                        Divider().background(Theme.hairline)
+                    }
+                }
+            }
+        }
+        .weeklyCardPadding(14)
+        .padding(.horizontal, 16)
+    }
+
     private var winsAndSlips: some View {
         HStack(alignment: .top, spacing: 10) {
             WeeklyBulletCard(
@@ -118,7 +146,7 @@ struct WeeklyReviewView: View {
 
     private var weekLines: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("The week in two lines")
+            Text("Past 7 days")
                 .kickerStyle(color: Theme.textBody)
 
             WeeklySparkRow(
@@ -144,7 +172,7 @@ struct WeeklyReviewView: View {
 
     private var nextWeekPlan: some View {
         VStack(alignment: .leading, spacing: 12) {
-            WeeklySectionHead(label: "Next week, automatically", right: "3 decisions")
+            WeeklySectionHead(label: "Next", right: "3 decisions")
 
             VStack(spacing: 8) {
                 ForEach(Array(viewModel.nextWeekPlan.enumerated()), id: \.offset) { index, text in
@@ -152,7 +180,7 @@ struct WeeklyReviewView: View {
                 }
             }
 
-            PrimaryButton(title: "Approve plan for next week") {}
+            PrimaryButton(title: "Use this plan") {}
                 .padding(.top, 2)
         }
         .padding(.top, 20)
@@ -406,6 +434,59 @@ private struct WeeklySparkRow: View {
                 }
             }
             .frame(height: 28)
+        }
+    }
+}
+
+private struct DailyWeightRow: View {
+    let row: DailyWeightTrendRow
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Text(row.dayLabel)
+                .font(.custom(Tokens.FontFamily.mono, size: 11))
+                .foregroundStyle(Theme.textSecondary)
+                .frame(width: 30, alignment: .leading)
+
+            Text(row.weightLabel)
+                .font(.custom(Tokens.FontFamily.sansRegular, size: 14))
+                .monospacedDigit()
+                .foregroundStyle(Theme.textPrimary)
+
+            Text("lb")
+                .font(.custom(Tokens.FontFamily.sansRegular, size: 11))
+                .foregroundStyle(Theme.textSecondary)
+
+            Spacer(minLength: 8)
+
+            HStack(spacing: 5) {
+                Image(systemName: iconName)
+                    .font(.system(size: 11, weight: .semibold))
+                Text(row.deltaLabel)
+                    .font(.custom(Tokens.FontFamily.mono, size: 10.5))
+                    .monospacedDigit()
+            }
+            .foregroundStyle(directionColor)
+            .frame(width: 64, alignment: .trailing)
+        }
+        .padding(.vertical, 9)
+    }
+
+    private var iconName: String {
+        switch row.direction {
+        case .down: return "arrow.down.right"
+        case .up: return "arrow.up.right"
+        case .flat: return "minus"
+        case .none: return "circle"
+        }
+    }
+
+    private var directionColor: Color {
+        switch row.direction {
+        case .down: return Theme.green
+        case .up: return Theme.accent
+        case .flat: return Theme.textSecondary
+        case .none: return Theme.textFaint
         }
     }
 }

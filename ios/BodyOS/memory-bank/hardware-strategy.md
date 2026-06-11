@@ -22,21 +22,23 @@ The per-metric source hierarchy that `HealthDataRouter` encodes. Derived from PR
 | Food calories / protein | Meal photo + Known Foods | Manual estimate | Wearable accuracy is irrelevant to food. |
 | Blood work | Manual upload (later) | — | Clinician-reviewed, not in MVP. |
 
-## Today (2026-05-21)
+## Today (2026-06-10)
 
-James returned **Oura** and now owns an **Apple Watch** connected to his Apple account. Oura code remains in the app but is disabled for now. Real iPhone HealthKit authorization and Apple Watch data display have been verified in BodyOS.
+James is getting access to Oura plus a smart scale. Oura should be the primary sleep/recovery source. Apple Health should coexist as a bridge for movement, workouts, iPhone/Health data, and gaps without duplicating Oura recovery. The web/OpenClaw layer now has Oura Ring 5 collection functions and a Withings webhook ingestion path ready for real credentials.
 
 So today, the router falls back to:
-- Sleep, HRV, RHR → Apple Watch through Apple Health, then `.estimated`.
-- Steps, active calories → Apple Watch through Apple Health, then iPhone / `.estimated`.
+- Sleep, HRV, RHR → Oura, then Apple Health/iPhone if Oura is unavailable.
+- Steps, active calories → Apple Health, then iPhone / `.estimated`.
 - Weight → smart-scale/manual/OpenClaw by default; accept Apple Health body-mass samples when present without letting passive data overwrite higher-confidence same-day manual entries.
 - Food → meal photo + known foods.
+- Body composition → Withings/Renpho/smart-scale body-composition events for trend context only; do not treat BIA fields as clinical facts.
 
 ## Near-term roadmap
 
-1. **Smart scale next.** Highest ROI — weight trend recalibrates the whole calorie model.
-2. **HealthKit source attribution.** Distinguish Apple Watch, iPhone, and future scale samples inside Apple Health instead of labeling aggregates too broadly.
-3. **Don't chase Garmin** unless serious endurance training becomes a goal.
+1. **Connect and test the real scale.** Withings webhook parsing is ready, but OAuth/access-token setup and a real weigh-in still need verification.
+2. **Confirm Oura Ring 5 fields against James's account.** Ring 5 endpoints are fetched defensively so unavailable collections do not break sync.
+3. **HealthKit source attribution.** Distinguish Apple Watch, iPhone, and future scale samples inside Apple Health instead of labeling aggregates too broadly.
+4. **Don't chase Garmin** unless serious endurance training becomes a goal.
 
 ## Source attribution readiness
 

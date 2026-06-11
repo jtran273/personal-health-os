@@ -47,9 +47,13 @@ final class WeeklyReviewViewModel {
         return defs.reduce(0, +) / defs.count
     }
 
+    var isPreviewData: Bool {
+        recentEntries.isEmpty
+    }
+
     /// Returns (firstKg, lastKg) over the window if at least two weights exist.
     var weightTrend: (Double, Double)? {
-        let summary = weightTrendService.trend(entries: recentEntries, windowDays: 7)
+        let summary = weightTrendService.trend(entries: displayEntries, windowDays: 7)
         guard let first = summary.startWeightKg, let last = summary.endWeightKg, summary.status == .ready else {
             return nil
         }
@@ -57,12 +61,12 @@ final class WeeklyReviewViewModel {
     }
 
     var weightTrendSummaries: [WeightTrendSummary] {
-        weightTrendService.trends(entries: recentEntries)
+        weightTrendService.trends(entries: displayEntries)
     }
 
     var weekKicker: String {
         let week = calendar.component(.weekOfYear, from: weekDates.last ?? Date())
-        return "Weekly review - Week \(week)"
+        return "Past - Week \(week)"
     }
 
     var dateRangeTitle: String {
@@ -71,8 +75,8 @@ final class WeeklyReviewViewModel {
     }
 
     var headline: String {
-        guard !recentEntries.isEmpty else {
-            return "Weekly review is waiting on ledger data. Sync sources first; do not fill the week with guesses."
+        if isPreviewData {
+            return "Preview: weight is down this week. Your scale will replace this."
         }
 
         guard let weightDeltaLb else {
@@ -113,11 +117,16 @@ final class WeeklyReviewViewModel {
     }
 
     var calibrationInsightTitle: String {
-        canRecalibrate ? "I recalibrated" : "Calibration waiting"
+        if isPreviewData { return "Preview mode" }
+        return canRecalibrate ? "I recalibrated" : "Calibration waiting"
     }
 
     var calibrationInsight: String {
-        let calibration = weightTrendService.calibration(entries: recentEntries, windowDays: 14)
+        if isPreviewData {
+            return "This is sample shape only. Daily scale readings will make the trend and calorie math real."
+        }
+
+        let calibration = weightTrendService.calibration(entries: displayEntries, windowDays: 14)
         guard let observedDeficit = calibration.observedDeficitKcalPerDay, let avgDeficit = calibration.avgEstimatedDeficit else {
             return "I need at least two weigh-ins and enough logged meals to compare calorie math against the scale."
         }
@@ -129,6 +138,25 @@ final class WeeklyReviewViewModel {
             return "Estimated deficit averaged \(avgDeficit) kcal/day. Weight trend implies \(observedText), so next week should trust the scale."
         }
         return "Estimated deficit and weight trend are close enough for this window. Keep the plan steady."
+    }
+
+    var dailyWeightRows: [DailyWeightTrendRow] {
+        let rows = weekDates.compactMap { date -> (Date, Double)? in
+            guard let weightKg = entry(on: date)?.weight?.weightKg else { return nil }
+            return (date, weightKg * WeightService.poundsPerKilogram)
+        }
+
+        return rows.enumerated().map { index, row in
+            let priorWeight = index > 0 ? rows[index - 1].1 : nil
+            let delta = priorWeight.map { row.1 - $0 }
+            return DailyWeightTrendRow(
+                date: row.0,
+                dayLabel: Self.weekday(row.0),
+                weightLabel: String(format: "%.1f", row.1),
+                deltaLabel: delta.map(Self.deltaText) ?? "base",
+                direction: Self.direction(for: delta)
+            )
+        }
     }
 
     var heldItems: [String] {
@@ -241,11 +269,34 @@ final class WeeklyReviewViewModel {
     }
 
     private var canRecalibrate: Bool {
-        weightTrendService.calibration(entries: recentEntries, windowDays: 14).correctionKcalPerDay != nil
+        weightTrendService.calibration(entries: displayEntries, windowDays: 14).correctionKcalPerDay != nil
     }
 
     private var weekEntries: [DailyLedgerEntry] {
         weekDates.compactMap { entry(on: $0) }
+    }
+
+    private var displayEntries: [DailyLedgerEntry] {
+        isPreviewData ? previewEntries : recentEntries
+    }
+
+    private var previewEntries: [DailyLedgerEntry] {
+        let weightsLb = [184.2, 184.0, 183.7, 183.8, 183.4, 183.0, 182.8]
+        let deficits = [220, 310, 430, 120, 520, 360, 280]
+
+        return weekDates.enumerated().map { index, date in
+            DailyLedgerEntry(
+                date: date,
+                weight: WeightEntry(
+                    date: date,
+                    weightKg: weightsLb[index] / WeightService.poundsPerKilogram,
+                    source: .smartScale,
+                    confidence: 0.75
+                ),
+                estimatedDeficit: deficits[index],
+                coverageScore: 0.35
+            )
+        }
     }
 
     private var weekDates: [Date] {
@@ -257,7 +308,7 @@ final class WeeklyReviewViewModel {
 
     private func entry(on date: Date) -> DailyLedgerEntry? {
         let day = calendar.startOfDay(for: date)
-        return recentEntries.first { calendar.isDate($0.date, inSameDayAs: day) }
+        return displayEntries.first { calendar.isDate($0.date, inSameDayAs: day) }
     }
 
     private func chartEntries(_ value: (DailyLedgerEntry) -> Double?) -> [Double?] {
@@ -271,6 +322,18 @@ final class WeeklyReviewViewModel {
         if abs(delta) < 0.05 { return "flat" }
         let direction = delta < 0 ? "down" : "up"
         return "\(direction) \(String(format: "%.1f", abs(delta))) lb"
+    }
+
+    private static func deltaText(_ delta: Double) -> String {
+        if abs(delta) < 0.05 { return "flat" }
+        return String(format: "%+.1f", delta)
+    }
+
+    private static func direction(for delta: Double?) -> DailyWeightTrendRow.Direction {
+        guard let delta else { return .none }
+        if delta < -0.05 { return .down }
+        if delta > 0.05 { return .up }
+        return .flat
     }
 
     private static func monthDay(_ date: Date) -> String {
@@ -291,6 +354,23 @@ struct WeeklyChartPoint: Identifiable, Equatable {
     let dayLabel: String
     let weightLb: Double?
     let deficit: Int?
+
+    var id: Date { date }
+}
+
+struct DailyWeightTrendRow: Identifiable, Equatable {
+    enum Direction {
+        case down
+        case up
+        case flat
+        case none
+    }
+
+    let date: Date
+    let dayLabel: String
+    let weightLabel: String
+    let deltaLabel: String
+    let direction: Direction
 
     var id: Date { date }
 }

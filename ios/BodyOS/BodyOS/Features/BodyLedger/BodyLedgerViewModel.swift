@@ -251,7 +251,7 @@ final class BodyLedgerViewModel {
                     label: "Body mode",
                     value: entry.bodyMode?.displayName ?? "-",
                     subLine: "computed from available recovery signals",
-                    source: "BodyOS",
+                    source: AppBrand.name,
                     confidence: entry.bodyMode == nil ? .low : .med,
                     story: entry.bodyMode == nil ? "No mode was computed for this row." : "Mode summarizes the day; it is not a diagnosis."
                 )

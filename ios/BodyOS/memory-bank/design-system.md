@@ -39,6 +39,8 @@ The handoff specifies colors in OKLCH. iOS SwiftUI has no native OKLCH color ini
 ## Components built so far
 
 - **BodyModeOrb** — 240pt breathing organic blob. Three cubic-bezier keyframes interpolated over a 9s loop with spline easing. Reduce-motion freezes at keyframe 1.
+- **TideMark / TideLockup** — reusable SwiftUI brand components for the Tide roundel and wordmark. `TideMark` draws the basin, water fill, and single waterline as Shapes; in `.mode` style, waterline height tracks `BodyMode` (`green=38`, `yellow=54`, `red=70`) and can animate with reduce-motion support. Use `TideLockup` for headers and settings surfaces.
+- **AppLogoMark** — backward-compatible wrapper around `TideMark` for older call sites. Prefer `TideMark` or `TideLockup` in new code.
 - **SourceChip** — paper-deep capsule with confidence dot + mono ALL-CAPS label. Convenience inits from `MetricSample` or `MetricSource`.
 - **Sparkline** — `Canvas`-based line chart. Confidence-driven dash pattern (high solid, med `[3,2]`, low `[1,2]`). Null values break the path. Optional 10% area fill. Smooth midpoint-quadratic interpolation.
 - **MetricTile** — Today-grid tile. `MetricTileData` struct → ALL-CAPS label + SourceChip on top, editorial number in the middle, mono delta + 56×16 sparkline on the bottom. Full tile is a tappable hit target.

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Info.plist template for BodyOS.
+  Info.plist template for Tide.
   `project.yml` is the source of truth for the generated Info.plist.
   Keep this file only as a quick reference for required permission strings.
 -->
@@ -8,16 +8,16 @@
 <plist version="1.0">
 <dict>
     <key>NSHealthShareUsageDescription</key>
-    <string>BodyOS reads your sleep, steps, heart rate, and weight to give you one useful recommendation per day. Data stays on-device unless you explicitly sync it.</string>
+    <string>Tide reads your sleep, steps, heart rate, and weight to give you one useful recommendation per day. Data stays on-device unless you explicitly sync it.</string>
 
     <key>NSHealthUpdateUsageDescription</key>
-    <string>BodyOS does not write to Apple Health yet.</string>
+    <string>Tide does not write to Apple Health yet.</string>
 
     <key>NSCameraUsageDescription</key>
-    <string>BodyOS uses your camera to log meals from photos.</string>
+    <string>Tide uses your camera to log meals from photos.</string>
 
     <key>NSPhotoLibraryUsageDescription</key>
-    <string>BodyOS lets you pick meal photos from your library to log food.</string>
+    <string>Tide lets you pick meal photos from your library to log food.</string>
 
     <!-- Custom fonts. XcodeGen adds these through project.yml. -->
     <key>UIAppFonts</key>

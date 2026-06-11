@@ -1,6 +1,6 @@
-# Handoff — Body OS (Physical Health Copilot)
+# Handoff — Tide (Physical Health Copilot)
 
-A mobile-first physical-health copilot. Quietly ingests messy data from wearables, photos, and manual logs; reconciles them with confidence and source attribution; and tells the user **one useful thing** per moment.
+Tide is a mobile-first physical-health copilot. It quietly ingests messy data from wearables, photos, and manual logs; reconciles them with confidence and source attribution; and tells the user **one useful thing** per moment. The name carries the product idea: recovery comes and goes like the tide, and the app reads where the water is today.
 
 This bundle is the **design reference** — high-fidelity HTML/React prototypes plus a design-system document. It is *not* shippable code. Your job is to recreate it natively in **SwiftUI (iOS 17+)** as the primary platform, with a secondary web port if you also need it. If the target codebase already exists, follow its conventions; if it doesn't, this README is the spec for greenfield.
 
@@ -18,8 +18,21 @@ Open these two first:
 |---|---|
 | `prototype/Health Copilot.html` | The clickable prototype — all 5 mobile screens + a desktop view, on a design canvas |
 | `prototype/Design System.html` | The full design system spec — tokens, components, patterns, voice, SwiftUI snippets |
+| `prototype/tide-mark.svg` | The Tide roundel vector reference |
 
 Everything else in `prototype/` is the React source that drives those two pages. Read it if you want to see the exact composition; ignore it for porting decisions.
+
+## Brand & identity (Tide)
+
+The mark is the **Tide roundel**: a circle basin plus one wave waterline. The installed home-screen icon uses the static monochrome ink mark for recognisability. In-app surfaces can animate the waterline height by body mode:
+
+| State | Waterline y | Meaning |
+|---|---:|---|
+| Green | 38 | high water / recovered |
+| Yellow | 54 | mid water / protect |
+| Red | 70 | low water / restore |
+
+Keep the palette warm. Do not recolor the mark blue or add gradients. The wordmark is simply `Tide` in Instrument Serif.
 
 ---
 
@@ -78,10 +91,10 @@ The MVP is five mobile screens + a desktop "Operator" view. Build in this order 
 - "Week in two lines" — sleep + protein sparklines, side by side.
 - Next week plan — 3 numbered cards. Approve button (primary, full width).
 
-### 5. Sources / Body OS (`screen-sources.jsx`)
+### 5. Sources / Settings (`screen-sources.jsx`)
 **Purpose:** the trust surface. Shows where data flows in.
 **Anatomy:**
-- Header — "Body OS" + title "What's flowing in."
+- Header — Tide lockup + title "Settings."
 - Coverage hero — circular meter + sentence about how to raise coverage.
 - **Metric routing table** — the key idea. One row per metric → which source we use → why. Current implementation uses Apple Watch / Apple Health for sleep, recovery, movement, and Health-sourced weight; older Oura examples are historical prototype references.
 - Source cards, grouped by status: Connected · Pending · Available. Each card: icon + name + status dot + role line + coverage bar + sub-line + manage/connect link.

@@ -13,7 +13,7 @@ const safePayload = {
   bridgeVersion: "2026-05-22",
   exportedAt: "2026-05-22T16:55:00.000Z",
   device: {
-    app: "BodyOS",
+    app: "Tide",
     platform: "iOS",
     healthKitPermission: "granted",
   },
@@ -72,7 +72,7 @@ const safePayload = {
   },
 };
 
-test("accepts a BodyOS assistant-safe HealthKit ledger handoff", () => {
+test("accepts a Tide assistant-safe HealthKit ledger handoff", () => {
   const result = validateBodyOSAssistantHealthExport(safePayload, fixedNow);
 
   assert.equal(result.ok, true);
@@ -82,9 +82,10 @@ test("accepts a BodyOS assistant-safe HealthKit ledger handoff", () => {
   assert.equal(result.latestLedger?.steps?.source, "apple_watch");
   assert.equal(result.latestLedger?.weightKg?.confidence, "high");
   assert.equal("payload" in (result.latestLedger?.steps ?? {}), false);
+  assert.equal(result.payload?.device.app, "Tide");
 });
 
-test("rejects raw HealthKit/provider dumps and tokens in BodyOS payloads", () => {
+test("rejects raw HealthKit/provider dumps and tokens in Tide payloads", () => {
   const unsafe = {
     ...safePayload,
     safety: {
@@ -101,7 +102,7 @@ test("rejects raw HealthKit/provider dumps and tokens in BodyOS payloads", () =>
   assert.match(result.errors?.join(" ") ?? "", /tokens must not be included/);
 });
 
-test("builds a normalized ledger from a BodyOS daily summary without raw samples", () => {
+test("builds a normalized ledger from a Tide daily summary without raw samples", () => {
   const result = validateBodyOSAssistantHealthExport(safePayload, fixedNow);
   const summary = result.payload?.dailySummaries[0];
   assert.ok(summary);
@@ -112,10 +113,10 @@ test("builds a normalized ledger from a BodyOS daily summary without raw samples
   assert.equal(ledger.rawEventIds.length, 0);
   assert.equal(ledger.sleepHours?.value, 6.7);
   assert.equal(ledger.hrvMs?.source, "apple_watch");
-  assert.match(ledger.steps?.notes ?? "", /BodyOS iOS ledger export/);
+  assert.match(ledger.steps?.notes ?? "", /Tide iOS ledger export/);
 });
 
-test("documents network auth expectations for BodyOS bridge writes", () => {
+test("documents network auth expectations for Tide bridge writes", () => {
   const safety = bodyOSAssistantBridgeSafetyMetadata();
 
   assert.equal(safety.rawHealthKitSamplesIncluded, false);
