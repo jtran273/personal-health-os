@@ -11,7 +11,8 @@ import {
   fetchOuraDailyResilience,
   fetchOuraDailySleep,
   fetchOuraDailySpo2,
-  fetchOuraDailyStress
+  fetchOuraDailyStress,
+  fetchOuraSleepPeriods
 } from "@/lib/providers/oura";
 
 export async function POST(request: NextRequest) {
@@ -56,6 +57,7 @@ export async function syncOuraRequest(store: RawHealthEventStore, body: unknown)
   }
 
   const opts = { startDate, endDate };
+  const sleepOpts = { startDate: addUtcDays(startDate, -1), endDate };
   const [
     sleepEvents,
     readinessEvents,
@@ -63,7 +65,8 @@ export async function syncOuraRequest(store: RawHealthEventStore, body: unknown)
     resilienceEvents,
     cardioAgeEvents,
     spo2Events,
-    stressEvents
+    stressEvents,
+    sleepPeriodEvents
   ] = await Promise.all([
     fetchOuraDailySleep(opts),
     fetchOuraDailyReadiness(opts),
@@ -71,7 +74,8 @@ export async function syncOuraRequest(store: RawHealthEventStore, body: unknown)
     tryFetch("daily_resilience", () => fetchOuraDailyResilience(opts)),
     tryFetch("daily_cardiovascular_age", () => fetchOuraDailyCardiovascularAge(opts)),
     tryFetch("daily_spo2", () => fetchOuraDailySpo2(opts)),
-    tryFetch("daily_stress", () => fetchOuraDailyStress(opts))
+    tryFetch("daily_stress", () => fetchOuraDailyStress(opts)),
+    tryFetch("sleep", () => fetchOuraSleepPeriods(sleepOpts))
   ]);
 
   const events = [
@@ -81,7 +85,8 @@ export async function syncOuraRequest(store: RawHealthEventStore, body: unknown)
     ...resilienceEvents,
     ...cardioAgeEvents,
     ...spo2Events,
-    ...stressEvents
+    ...stressEvents,
+    ...sleepPeriodEvents
   ];
   const write = await store.insertMany(events);
   const normalized = buildNormalizedDailyLedger({
@@ -97,4 +102,10 @@ export async function syncOuraRequest(store: RawHealthEventStore, body: unknown)
     ledger: normalized.ledger,
     bodyModeReasons: normalized.bodyModeReasons
   };
+}
+
+function addUtcDays(date: string, days: number): string {
+  const next = new Date(`${date}T00:00:00.000Z`);
+  next.setUTCDate(next.getUTCDate() + days);
+  return next.toISOString().slice(0, 10);
 }

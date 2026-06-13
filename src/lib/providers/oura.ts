@@ -16,6 +16,12 @@ export async function fetchOuraDailySleep(
   return fetchOuraCollection("daily_sleep", options);
 }
 
+export async function fetchOuraSleepPeriods(
+  options: OuraFetchOptions
+): Promise<RawHealthEvent[]> {
+  return fetchOuraCollection("sleep", options);
+}
+
 export async function fetchOuraDailyReadiness(
   options: OuraFetchOptions
 ): Promise<RawHealthEvent[]> {
@@ -53,6 +59,7 @@ export async function fetchOuraDailyStress(
 }
 
 type OuraCollection =
+  | "sleep"
   | "daily_sleep"
   | "daily_readiness"
   | "daily_activity"

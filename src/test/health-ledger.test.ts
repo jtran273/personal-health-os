@@ -31,16 +31,27 @@ test("normalizes Oura, meal, weight, trend, and body mode signals", () => {
     {
       id: "oura-sleep",
       source: "oura",
-      type: "daily_sleep",
+      type: "sleep",
       observedAt: "2026-05-21T00:00:00.000Z",
       receivedAt: "2026-05-21T08:00:00.000Z",
       externalId: "sleep-1",
       payload: {
         day: "2026-05-21",
-        score: 68,
         total_sleep_duration: 21_600,
         average_hrv: 41,
         lowest_heart_rate: 52
+      }
+    },
+    {
+      id: "oura-daily-sleep",
+      source: "oura",
+      type: "daily_sleep",
+      observedAt: "2026-05-21T00:00:00.000Z",
+      receivedAt: "2026-05-21T08:00:00.000Z",
+      externalId: "daily-sleep-1",
+      payload: {
+        day: "2026-05-21",
+        score: 68
       }
     },
     {
