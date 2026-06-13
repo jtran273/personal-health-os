@@ -116,6 +116,17 @@ test("builds a normalized ledger from a Tide daily summary without raw samples",
   assert.match(ledger.steps?.notes ?? "", /Tide iOS ledger export/);
 });
 
+test("accepts iPhone-attributed Tide summary metrics", () => {
+  const payload = structuredClone(safePayload);
+  payload.dailySummaries[0].steps.source = "apple_iphone";
+  payload.dailySummaries[0].sourceAttribution[0].source = "apple_iphone";
+
+  const result = validateBodyOSAssistantHealthExport(payload, fixedNow);
+
+  assert.equal(result.ok, true);
+  assert.equal(result.latestLedger?.steps?.source, "apple_iphone");
+});
+
 test("documents network auth expectations for Tide bridge writes", () => {
   const safety = bodyOSAssistantBridgeSafetyMetadata();
 

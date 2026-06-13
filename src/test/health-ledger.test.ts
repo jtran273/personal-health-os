@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { InMemoryRawHealthEventStore } from "@/lib/health/ledger";
 import { buildNormalizedDailyLedger, calculateWeightTrendKgPerWeek } from "@/lib/health/normalization";
-import { validateMealInput, validateWeightInput, ValidationError } from "@/lib/health/validation";
+import { validateMealInput, validateRawHealthEvent, validateWeightInput, ValidationError } from "@/lib/health/validation";
 import { createOpenClawMealEvent, createOpenClawWeightEvent } from "@/lib/providers/openclaw";
 import { buildDailyLedgerResponse } from "../../app/api/health/daily-ledger/route";
 import { buildMealsResponse, ingestMealRequest } from "../../app/api/health/meals/route";
@@ -110,4 +110,18 @@ test("validators reject malformed meal, weight, and date inputs", () => {
   assert.throws(() => validateMealInput({ loggedAt: "2026-05-21T10:00:00.000Z" }), ValidationError);
   assert.throws(() => validateWeightInput({ weightKg: -1 }), ValidationError);
   assert.doesNotThrow(() => validateWeightInput({ weightKg: 81.5, loggedAt: "2026-05-21T10:00:00.000Z" }));
+});
+
+test("raw event validator accepts typed Apple iPhone source attribution", () => {
+  assert.equal(
+    validateRawHealthEvent({
+      id: "iphone-steps",
+      source: "apple_iphone",
+      type: "steps",
+      observedAt: "2026-05-21T10:00:00.000Z",
+      receivedAt: "2026-05-21T10:01:00.000Z",
+      payload: { steps: 1200 }
+    }).source,
+    "apple_iphone"
+  );
 });
