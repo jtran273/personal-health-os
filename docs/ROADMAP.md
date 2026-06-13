@@ -9,10 +9,14 @@ handoff in `ios/BodyOS/HANDOFF.md`.
    being sample-only.
 2. **Trust OpenClaw ingestion.** Require `OPENCLAW_INGESTION_TOKEN` on write routes and save the
    raw meal/weight event before normalization.
-3. **Finish meal text path.** Parse common OpenClaw meal text into calories, protein, and notes;
-   preserve the original text on the raw event. Current backend foundation accepts text/photo
-   inputs, saves corrected meals as Known Foods, reuses exact known-food matches, and refuses to
-   invent unmatched photo/text macros until an estimator is wired in.
+3. **Finish meal text path.** *(Deterministic slice shipped.)* `MealLogService.estimateMacros`
+   now parses explicit user-stated macros from text ("~600 cal, 40g protein" → `meal_text`,
+   confidence high for exact numbers / medium when hedged, out-of-range values discarded) and
+   sums multiple known foods mentioned in one message, while still preserving the original text
+   and refusing to invent macros for bare food names or unmatched photos. Precedence:
+   corrected (manual) > explicit stated numbers > known-food match > unknown. Covered by
+   `src/test/meal-text-parsing.test.ts`. Remaining: a model-backed estimator for photos and
+   free-form descriptions (see Next → Meal photo queue).
 4. **Expose daily summary.** Add an endpoint that returns body mode, missing signals, and one
    concise action for OpenClaw to send.
 5. **Choose nutrition tracking path.** Use `docs/NUTRITION_TRACKING_STRATEGY.md` as the product
