@@ -50,7 +50,6 @@ function applyOuraEvents(ledger: NormalizedDailyLedger, events: RawHealthEvent[]
     if (event.type === "daily_sleep") {
       const sleepSeconds = firstNumber(event.payload, [
         "total_sleep_duration",
-        "contributors.total_sleep",
         "sleep.total_sleep_duration"
       ]);
       const score = firstNumber(event.payload, ["score", "readiness.score"]);

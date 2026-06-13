@@ -130,3 +130,27 @@ test("applyOuraRing5Events: populates cardiovascularAge from daily_cardiovascula
   const { ledger } = buildNormalizedDailyLedger({ date: "2024-06-01", events });
   assert.equal(ledger.cardiovascularAge?.value, 28);
 });
+
+test("applyOuraEvents: does not treat daily_sleep contributor scores as sleep duration", () => {
+  const events: RawHealthEvent[] = [
+    {
+      id: "sleep-score-only",
+      source: "oura",
+      type: "daily_sleep",
+      observedAt: "2024-06-01T00:00:00.000Z",
+      receivedAt: "2024-06-01T08:00:00.000Z",
+      payload: {
+        day: "2024-06-01",
+        score: 72,
+        contributors: {
+          total_sleep: 75
+        }
+      }
+    }
+  ];
+
+  const { ledger } = buildNormalizedDailyLedger({ date: "2024-06-01", events });
+
+  assert.equal(ledger.sleepHours, undefined);
+  assert.equal(ledger.readinessScore?.value, 72);
+});
