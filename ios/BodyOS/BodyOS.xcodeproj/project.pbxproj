@@ -23,7 +23,6 @@
 		339A6E60243E3C13770F0F5F /* Geist-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E5B94DD5FE62F089C0C74CAD /* Geist-Medium.ttf */; };
 		33BAFFB92115AFE3379B4E31 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = 126CD0E7EA3AB61B8D8AA5CD /* Typography.swift */; };
 		38D89240DCB343D66A275CE1 /* WeightTrendService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E76FAD05301F10E503000129 /* WeightTrendService.swift */; };
-		38FC26B2DB045EE010820CF7 /* Secrets.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3E4C3DC1722F87CD186228D9 /* Secrets.plist */; };
 		3A9F466704A0671946AC5065 /* OuraConnectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF7DEEA85CA7A143A7CA32BC /* OuraConnectionView.swift */; };
 		3E8042351F06A60B6BC4BF46 /* HealthDataRouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49E675A325482AA86CE69094 /* HealthDataRouterTests.swift */; };
 		3EB46508CF425DEB2F62ABBD /* LedgerCoverage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D32D190AC1CCAA6B8C44EE62 /* LedgerCoverage.swift */; };
@@ -119,7 +118,6 @@
 		395767C434567D134D4C2657 /* SleepRecovery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepRecovery.swift; sourceTree = "<group>"; };
 		3B6E750E9F6EE32AA0EC4E1C /* HealthKitSourceAttributionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitSourceAttributionTests.swift; sourceTree = "<group>"; };
 		3CFA06FE7A5FD83DEF2AB52A /* SwiftDataLedgerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftDataLedgerStore.swift; sourceTree = "<group>"; };
-		3E4C3DC1722F87CD186228D9 /* Secrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Secrets.plist; sourceTree = "<group>"; };
 		41EAB19E65E7C7BFD4406603 /* MetricSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricSource.swift; sourceTree = "<group>"; };
 		444B958370EB603BDF3E8E9E /* DeficitEstimatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeficitEstimatorTests.swift; sourceTree = "<group>"; };
 		49E675A325482AA86CE69094 /* HealthDataRouterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthDataRouterTests.swift; sourceTree = "<group>"; };
@@ -293,7 +291,6 @@
 				208BE63B4838D3086649EF8F /* Assets.xcassets */,
 				0D1AE60823311BDBBF2BE6E3 /* BodyOS.entitlements */,
 				CD7D20332A5A4A52B93E4A00 /* Info.plist */,
-				3E4C3DC1722F87CD186228D9 /* Secrets.plist */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -510,7 +507,6 @@
 				9F79904C58863192C0B23044 /* Geist-Regular.ttf in Resources */,
 				62FA89E5A8B34D5246A42D1F /* InstrumentSerif-Regular.ttf in Resources */,
 				C23FD9ADBF135C167D0489B7 /* JetBrainsMono-Regular.ttf in Resources */,
-				38FC26B2DB045EE010820CF7 /* Secrets.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

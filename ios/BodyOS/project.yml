@@ -23,11 +23,12 @@ targets:
     deploymentTarget: "17.0"
 
     sources:
-      # Secrets.plist (gitignored) is intentionally bundled so OuraTokenStore can
-      # resolve the Oura PAT in local builds without pasting it into the Keychain.
+      # Secrets.plist is gitignored and must stay out of the generated project.
+      # Use Settings -> Oura to persist the PAT in Keychain for local builds.
       - path: BodyOS
         excludes:
           - "Resources/Info.plist.template"
+          - "Resources/Secrets.plist"
           - "Resources/Secrets.plist.example"
           - "DesignSystem/Fonts/README.md"
 
