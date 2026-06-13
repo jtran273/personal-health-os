@@ -1,5 +1,6 @@
 import { classifyBodyMode } from "./body-mode";
-import type { BodyComposition, MealLog, MetricSource, MetricValue, NormalizedDailyLedger, RawHealthEvent, ResilienceLevel } from "./types";
+import { classifyHealthKitSource } from "./source-routing";
+import type { BodyComposition, MealLog, MetricSource, MetricValue, NormalizedDailyLedger, RawHealthEvent, ResilienceLevel, WearableSource } from "./types";
 
 export interface BuildDailyLedgerOptions {
   date: string;
@@ -26,6 +27,7 @@ export function buildNormalizedDailyLedger(options: BuildDailyLedgerOptions): Bu
 
   applyOuraEvents(ledger, dayEvents);
   applyOuraRing5Events(ledger, dayEvents);
+  applyAppleHealthEvents(ledger, dayEvents);
   applySmartScaleEvents(ledger, dayEvents, allWeightEvents);
   applyWeight(ledger, dayEvents, allWeightEvents);
   applyEstimatedDeficit(ledger);
@@ -119,13 +121,56 @@ function applyOuraRing5Events(ledger: NormalizedDailyLedger, events: RawHealthEv
   }
 }
 
+function applyAppleHealthEvents(ledger: NormalizedDailyLedger, events: RawHealthEvent[]): void {
+  for (const event of events.filter((candidate) => isAppleHealthSource(candidate.source))) {
+    const source = attributedSourceForEvent(event);
+
+    if (event.type === "sleep" || event.type === "daily_sleep") {
+      const sleepHours = firstNumber(event.payload, ["sleepHours", "hours"]);
+      const sleepSeconds = firstNumber(event.payload, ["sleepSeconds", "total_sleep_duration", "totalSleepDuration"]);
+      const value = sleepHours ?? (sleepSeconds === undefined ? undefined : round(sleepSeconds / 3600, 2));
+      if (value !== undefined) ledger.sleepHours = metric(value, source, source === "apple_watch" ? "high" : "medium");
+    }
+
+    if (event.type === "hrv") {
+      const hrv = firstNumber(event.payload, ["hrvMs", "value", "milliseconds"]);
+      if (hrv !== undefined) ledger.hrvMs = metric(hrv, source, source === "apple_watch" ? "high" : "medium");
+    }
+
+    if (event.type === "resting_heart_rate") {
+      const rhr = firstNumber(event.payload, ["bpm", "value", "restingHeartRateBpm"]);
+      if (rhr !== undefined) ledger.restingHeartRateBpm = metric(rhr, source, source === "apple_watch" ? "high" : "medium");
+    }
+
+    if (event.type === "steps" || event.type === "daily_activity") {
+      const steps = firstNumber(event.payload, ["steps", "count", "value"]);
+      if (steps !== undefined) ledger.steps = metric(steps, source, "medium");
+    }
+
+    if (event.type === "active_energy" || event.type === "daily_activity") {
+      const calories = firstNumber(event.payload, ["activeEnergyCalories", "calories", "active_calories", "value"]);
+      if (calories !== undefined) {
+        ledger.activeEnergyCalories = metric(calories, source, "low", "Wearable calories are a rough prior pending weight trend recalibration.");
+      }
+    }
+  }
+}
+
+function isAppleHealthSource(source: WearableSource): boolean {
+  return source === "apple_health" || source === "apple_watch" || source === "apple_iphone";
+}
+
 function applySmartScaleEvents(
   ledger: NormalizedDailyLedger,
   dayEvents: RawHealthEvent[],
   allWeightEvents: RawHealthEvent[]
 ): void {
   const scaleEvents = dayEvents.filter(
-    (e) => (e.source === "withings" || e.source === "renpho") && e.type === "body_composition"
+    (e) =>
+      (e.source === "withings" ||
+        e.source === "renpho" ||
+        (e.source === "apple_health" && attributedSourceForEvent(e) === "smart_scale")) &&
+      e.type === "body_composition"
   );
 
   if (scaleEvents.length === 0) return;
@@ -139,12 +184,13 @@ function applySmartScaleEvents(
   const bone = readNumber(latest.payload, "boneMassKg");
   const water = readNumber(latest.payload, "waterMassKg");
   const visceral = readNumber(latest.payload, "visceralFatIndex");
+  const source = attributedSourceForEvent(latest);
 
-  if (bodyFat !== undefined) bodyComp.bodyFatPercentage = metric(bodyFat, latest.source, "high");
-  if (muscle !== undefined) bodyComp.muscleMassKg = metric(muscle, latest.source, "high");
-  if (bone !== undefined) bodyComp.boneMassKg = metric(bone, latest.source, "high");
-  if (water !== undefined) bodyComp.waterMassKg = metric(water, latest.source, "high");
-  if (visceral !== undefined) bodyComp.visceralFatIndex = metric(visceral, latest.source, "medium");
+  if (bodyFat !== undefined) bodyComp.bodyFatPercentage = metric(bodyFat, source, "high");
+  if (muscle !== undefined) bodyComp.muscleMassKg = metric(muscle, source, "high");
+  if (bone !== undefined) bodyComp.boneMassKg = metric(bone, source, "high");
+  if (water !== undefined) bodyComp.waterMassKg = metric(water, source, "high");
+  if (visceral !== undefined) bodyComp.visceralFatIndex = metric(visceral, source, "medium");
 
   if (Object.keys(bodyComp).length > 0) ledger.bodyComposition = bodyComp;
 
@@ -173,7 +219,8 @@ function applyWeight(
 
   const weightKg = todayWeight ? readNumber(todayWeight.payload, "weightKg") : undefined;
   if (todayWeight && weightKg !== undefined) {
-    ledger.weightKg = metric(weightKg, todayWeight.source, todayWeight.source === "smart_scale" ? "high" : "medium");
+    const source = attributedSourceForEvent(todayWeight);
+    ledger.weightKg = metric(weightKg, source, source === "smart_scale" ? "high" : "medium");
   }
 
   const trend = calculateWeightTrendKgPerWeek(allWeightEvents);
@@ -250,6 +297,11 @@ function metric<T>(value: T, source: MetricSource, confidence: MetricValue<T>["c
   return { value, source, confidence, notes };
 }
 
+function attributedSourceForEvent(event: RawHealthEvent): WearableSource {
+  if (event.source !== "apple_health") return event.source;
+  return classifyHealthKitSource(event.payload);
+}
+
 function eventDate(event: RawHealthEvent): string {
   const payloadDay = readString(event.payload, "day");
   return payloadDay ?? event.observedAt.slice(0, 10);
@@ -279,6 +331,7 @@ function readMetricSource(payload: unknown, path: string): MetricSource | undefi
     value === "oura" ||
     value === "apple_health" ||
     value === "apple_watch" ||
+    value === "apple_iphone" ||
     value === "garmin" ||
     value === "smart_scale" ||
     value === "withings" ||

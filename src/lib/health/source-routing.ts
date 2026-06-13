@@ -1,5 +1,7 @@
 import type { HealthMetric, MetricConfidence, WearableSource } from "./types";
 
+export type HealthKitAttributedSource = Extract<WearableSource, "apple_health" | "apple_watch" | "apple_iphone" | "smart_scale">;
+
 export interface SourceRoute {
   metric: HealthMetric;
   preferredSource: WearableSource;
@@ -47,7 +49,7 @@ const routes: Record<HealthMetric, SourceRoute> = {
   steps: {
     metric: "steps",
     preferredSource: "apple_health",
-    fallbackSources: ["apple_watch", "garmin", "oura", "manual"],
+    fallbackSources: ["apple_watch", "apple_iphone", "garmin", "oura", "manual"],
     defaultConfidence: "medium",
     rationale: "HealthKit-style aggregation is preferred for daily steps when available."
   },
@@ -61,7 +63,7 @@ const routes: Record<HealthMetric, SourceRoute> = {
   active_energy: {
     metric: "active_energy",
     preferredSource: "apple_health",
-    fallbackSources: ["apple_watch", "garmin", "oura", "manual"],
+    fallbackSources: ["apple_watch", "apple_iphone", "garmin", "oura", "manual"],
     defaultConfidence: "low",
     rationale: "Wearable calories are weak and should be recalibrated against weight trend."
   },
@@ -131,8 +133,73 @@ export function chooseBestSource(
   };
 }
 
+export function classifyHealthKitSource(metadata: unknown): HealthKitAttributedSource {
+  const text = healthKitMetadataText(metadata);
+
+  if (containsAny(text, smartScaleHints)) return "smart_scale";
+  if (containsAny(text, appleWatchHints)) return "apple_watch";
+  if (containsAny(text, appleIPhoneHints)) return "apple_iphone";
+
+  return "apple_health";
+}
+
 function degradeConfidence(confidence: MetricConfidence): MetricConfidence {
   if (confidence === "high") return "medium";
   if (confidence === "medium") return "low";
   return confidence;
+}
+
+const smartScaleHints = [
+  "smart scale",
+  "body scale",
+  "bathroom scale",
+  "withings",
+  "health mate",
+  "body cardio",
+  "body comp",
+  "body smart",
+  "body+",
+  "renpho",
+  "eufy smart scale",
+  "fitbit aria",
+  "qardio",
+  "wyze scale"
+];
+
+const appleWatchHints = [
+  "apple watch",
+  "applewatch",
+  "model watch",
+  "device watch",
+  "com.apple.nano",
+  "com.apple.health.watch",
+  "watchos"
+];
+
+const appleIPhoneHints = [
+  "iphone",
+  "ios device",
+  "com.apple.health.iphone"
+];
+
+function healthKitMetadataText(metadata: unknown): string {
+  const values = collectStringValues(metadata);
+  return values.join(" ").toLowerCase();
+}
+
+function collectStringValues(value: unknown): string[] {
+  if (typeof value === "string") return [value];
+  if (Array.isArray(value)) return value.flatMap(collectStringValues);
+  if (!value || typeof value !== "object") return [];
+
+  const strings: string[] = [];
+  for (const [key, nested] of Object.entries(value)) {
+    strings.push(key);
+    strings.push(...collectStringValues(nested));
+  }
+  return strings;
+}
+
+function containsAny(text: string, hints: string[]): boolean {
+  return hints.some((hint) => text.includes(hint));
 }

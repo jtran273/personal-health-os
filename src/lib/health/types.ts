@@ -2,6 +2,7 @@ export type WearableSource =
   | "oura"
   | "apple_health"
   | "apple_watch"
+  | "apple_iphone"
   | "garmin"
   | "smart_scale"
   | "withings"
