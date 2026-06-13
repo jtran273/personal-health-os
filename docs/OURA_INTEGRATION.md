@@ -44,9 +44,14 @@ same range is safe — raw event IDs are deterministic and inserts are deduped.
 ## Collections fetched
 
 `daily_sleep`, `daily_readiness`, `daily_activity` (required — failures fail
-the sync), plus `daily_resilience`, `daily_cardiovascular_age`, `daily_spo2`,
-`daily_stress` (best-effort — failures are logged and skipped, since some
-require newer ring hardware or take weeks of wear to populate).
+the sync), plus detailed `sleep`, `daily_resilience`,
+`daily_cardiovascular_age`, `daily_spo2`, `daily_stress` (best-effort —
+failures are logged and skipped, since some require newer ring hardware or take
+weeks of wear to populate).
+
+Detailed `sleep` periods provide physical sleep duration, HRV, and resting
+heart rate. `daily_sleep` is score-only and its contributor fields are 0–100
+sub-scores, not physical units.
 
 A brand-new ring returns almost nothing on day one; sleep/readiness appear the
 morning after the first night worn. An empty sync result is normal, not a bug.

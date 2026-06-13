@@ -44,31 +44,41 @@ export function buildNormalizedDailyLedger(options: BuildDailyLedgerOptions): Bu
 }
 
 function applyOuraEvents(ledger: NormalizedDailyLedger, events: RawHealthEvent[]): void {
+  const sleepPeriods = events
+    .filter((event) => event.source === "oura" && event.type === "sleep")
+    .map((event) => ({
+      event,
+      duration: readNumber(event.payload, "total_sleep_duration")
+    }))
+    .filter((entry): entry is { event: RawHealthEvent; duration: number } => entry.duration !== undefined)
+    .sort((a, b) => b.duration - a.duration);
+  const mainSleep = sleepPeriods[0];
+
+  if (mainSleep) {
+    ledger.sleepHours = metric(round(mainSleep.duration / 3600, 2), "oura", "high");
+
+    const hrv = readNumber(mainSleep.event.payload, "average_hrv");
+    const rhr =
+      readNumber(mainSleep.event.payload, "lowest_heart_rate") ??
+      readNumber(mainSleep.event.payload, "average_heart_rate");
+
+    if (hrv !== undefined) ledger.hrvMs = metric(hrv, "oura", "high");
+    if (rhr !== undefined) ledger.restingHeartRateBpm = metric(rhr, "oura", "high");
+  }
+
   for (const event of events.filter((candidate) => candidate.source === "oura")) {
     if (event.type === "daily_sleep") {
-      const sleepSeconds = firstNumber(event.payload, [
-        "total_sleep_duration",
-        "contributors.total_sleep",
-        "sleep.total_sleep_duration"
-      ]);
       const score = firstNumber(event.payload, ["score", "readiness.score"]);
-      const hrv = firstNumber(event.payload, ["average_hrv", "contributors.hrv_balance", "hrv"]);
-      const rhr = firstNumber(event.payload, ["lowest_heart_rate", "average_heart_rate", "resting_heart_rate"]);
 
-      if (sleepSeconds !== undefined) {
-        ledger.sleepHours = metric(round(sleepSeconds / 3600, 2), "oura", "high");
-      }
       if (score !== undefined && !ledger.readinessScore) {
         ledger.readinessScore = metric(score, "oura", "medium", "Mapped from Oura sleep score until readiness is available.");
       }
-      if (hrv !== undefined) ledger.hrvMs = metric(hrv, "oura", "medium");
-      if (rhr !== undefined) ledger.restingHeartRateBpm = metric(rhr, "oura", "medium");
     }
 
     if (event.type === "daily_readiness") {
       const score = firstNumber(event.payload, ["score"]);
-      const hrv = firstNumber(event.payload, ["contributors.hrv_balance", "hrv"]);
-      const rhr = firstNumber(event.payload, ["contributors.resting_heart_rate", "resting_heart_rate"]);
+      const hrv = firstNumber(event.payload, ["hrv"]);
+      const rhr = firstNumber(event.payload, ["resting_heart_rate"]);
       const temp = firstNumber(event.payload, ["temperature_deviation", "temperature_trend_deviation"]);
 
       if (score !== undefined) ledger.readinessScore = metric(score, "oura", "high");
@@ -251,6 +261,13 @@ function metric<T>(value: T, source: MetricSource, confidence: MetricValue<T>["c
 }
 
 function eventDate(event: RawHealthEvent): string {
+  if (event.source === "oura" && event.type === "sleep") {
+    const bedtimeEnd = readString(event.payload, "bedtime_end");
+    if (bedtimeEnd && /^\d{4}-\d{2}-\d{2}/.test(bedtimeEnd)) {
+      return bedtimeEnd.slice(0, 10);
+    }
+  }
+
   const payloadDay = readString(event.payload, "day");
   return payloadDay ?? event.observedAt.slice(0, 10);
 }
