@@ -33,25 +33,56 @@ export class MealLogService {
       };
     }
 
-    const matchedKnownFood = input.text ? matchKnownFood(input.text, this.knownFoods) : undefined;
-    if (matchedKnownFood) {
+    // Explicit macros the user typed for this meal are the most specific signal, so they
+    // outrank known-food reuse. We only ever surface numbers the text actually stated.
+    if (input.text) {
+      const stated = parseStatedMacros(input.text);
+      if (stated.calories !== undefined || stated.proteinGrams !== undefined) {
+        const confidence: MetricConfidence = stated.hedged ? "medium" : "high";
+        const note = stated.hedged
+          ? "Parsed an approximate value you stated in text; correct it if the portion was different."
+          : "Parsed explicit calorie/protein values stated in the meal text.";
+        return {
+          estimatedCalories: metric(stated.calories, "meal_text", confidence, note),
+          estimatedProteinGrams: metric(stated.proteinGrams, "meal_text", confidence, note),
+          source: "meal_text",
+          confidence,
+          notes: ["Used only values stated in the meal text; no macros were invented.", ...stated.outOfRangeNotes]
+        };
+      }
+    }
+
+    const matchedFoods = input.text ? matchKnownFoods(input.text, this.knownFoods) : [];
+
+    if (matchedFoods.length === 1) {
+      const food = matchedFoods[0];
       return {
-        estimatedCalories: metric(matchedKnownFood.calories, "known_food", "medium", `Matched known food: ${matchedKnownFood.name}.`),
-        estimatedProteinGrams: metric(
-          matchedKnownFood.proteinGrams,
-          "known_food",
-          "medium",
-          `Matched known food: ${matchedKnownFood.name}.`
-        ),
-        matchedKnownFood,
+        estimatedCalories: metric(food.calories, "known_food", "medium", `Matched known food: ${food.name}.`),
+        estimatedProteinGrams: metric(food.proteinGrams, "known_food", "medium", `Matched known food: ${food.name}.`),
+        matchedKnownFood: food,
         source: "known_food",
         confidence: "medium",
         notes: ["Reused a known food match; confirm serving size if this meal was different."]
       };
     }
 
+    if (matchedFoods.length > 1) {
+      const calories = sumDefined(matchedFoods.map((food) => food.calories));
+      const proteinGrams = sumDefined(matchedFoods.map((food) => food.proteinGrams));
+      const names = matchedFoods.map((food) => food.name).join(", ");
+      return {
+        estimatedCalories: metric(calories, "known_food", "medium", `Summed known foods: ${names}.`),
+        estimatedProteinGrams: metric(proteinGrams, "known_food", "medium", `Summed known foods: ${names}.`),
+        source: "known_food",
+        confidence: "medium",
+        notes: [
+          `Summed ${matchedFoods.length} known foods (${names}); correct the total if a serving differed or an item was missed.`
+        ]
+      };
+    }
+
     if (input.photoUrl) notes.push("Photo accepted for future estimator routing, but no image macros were inferred in this backend slice.");
-    if (input.text) notes.push("Text preserved for future parsing, but no unmatched macros were inferred.");
+    if (input.text) notes.push("Text preserved, but no known food matched and no explicit macros were stated, so nothing was invented.");
 
     return {
       source: "unknown",
@@ -105,14 +136,80 @@ export function createKnownFoodEvent(food: KnownFood, observedAt: string, receiv
   };
 }
 
-function matchKnownFood(text: string, knownFoods: KnownFood[]): KnownFood | undefined {
+// Returns every distinct known food whose name/serving/tag appears in the text, so a
+// single message like "chicken rice bowl and a protein shake" can resolve to both foods.
+// When two matches overlap (e.g. "rice" inside "chicken rice bowl") we keep the longer,
+// more specific one to avoid double-counting. A single match preserves the original
+// first-match contract exactly.
+function matchKnownFoods(text: string, knownFoods: KnownFood[]): KnownFood[] {
   const normalizedText = normalizeFoodText(text);
-  return knownFoods.find((food) => {
-    const candidates = [food.name, food.servingDescription, ...(food.tags ?? [])]
+  const matched: { food: KnownFood; matchKey: string }[] = [];
+
+  for (const food of knownFoods) {
+    const matchKey = [food.name, food.servingDescription, ...(food.tags ?? [])]
       .filter((value): value is string => Boolean(value))
-      .map(normalizeFoodText);
-    return candidates.some((candidate) => candidate.length >= 3 && normalizedText.includes(candidate));
-  });
+      .map(normalizeFoodText)
+      .filter((candidate) => candidate.length >= 3 && normalizedText.includes(candidate))
+      .sort((a, b) => b.length - a.length)[0];
+    if (matchKey) matched.push({ food, matchKey });
+  }
+
+  return matched
+    .filter((entry, _index, all) =>
+      !all.some((other) => other.food.id !== entry.food.id && other.matchKey.length > entry.matchKey.length && other.matchKey.includes(entry.matchKey))
+    )
+    .map((entry) => entry.food);
+}
+
+interface StatedMacros {
+  calories?: number;
+  proteinGrams?: number;
+  hedged: boolean;
+  outOfRangeNotes: string[];
+}
+
+// Pulls only macros the user explicitly typed (e.g. "~600 cal, 40g protein"). It never
+// guesses from bare food names — text with no stated numbers returns nothing here.
+function parseStatedMacros(text: string): StatedMacros {
+  const lower = text.toLowerCase();
+  const hedged = /(~|\babout\b|\bapprox(?:imately)?\b|\broughly\b|\baround\b)/.test(lower);
+  const outOfRangeNotes: string[] = [];
+
+  let calories = firstCapturedNumber(lower, [
+    /(\d{2,5})\s*k?cal(?:orie)?s?\b/,
+    /\bk?cal(?:orie)?s?\s*[:=]?\s*(\d{2,5})\b/
+  ]);
+  if (calories !== undefined && (calories < 50 || calories > 6000)) {
+    outOfRangeNotes.push(`Ignored a stated calorie value (${calories}) outside the plausible 50-6000 range.`);
+    calories = undefined;
+  }
+
+  let proteinGrams = firstCapturedNumber(lower, [
+    /(\d{1,4})\s*g(?:rams)?\s*(?:of\s+)?protein\b/,
+    /\bprotein\s*[:=]?\s*(\d{1,4})\s*g(?:rams)?\b/
+  ]);
+  if (proteinGrams !== undefined && (proteinGrams < 1 || proteinGrams > 400)) {
+    outOfRangeNotes.push(`Ignored a stated protein value (${proteinGrams}g) outside the plausible 1-400g range.`);
+    proteinGrams = undefined;
+  }
+
+  return { calories, proteinGrams, hedged, outOfRangeNotes };
+}
+
+function firstCapturedNumber(text: string, patterns: RegExp[]): number | undefined {
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match) {
+      const value = Number(match[1]);
+      if (Number.isFinite(value)) return value;
+    }
+  }
+  return undefined;
+}
+
+function sumDefined(values: (number | undefined)[]): number | undefined {
+  const present = values.filter((value): value is number => value !== undefined);
+  return present.length ? present.reduce((sum, value) => sum + value, 0) : undefined;
 }
 
 function knownFoodFromPayload(payload: unknown): KnownFood | undefined {

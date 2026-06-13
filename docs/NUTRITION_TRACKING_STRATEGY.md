@@ -18,6 +18,7 @@ This is more useful than a pure Cal AI clone because weight trend can tell us wh
 
 ## Near-Term Build
 
+- **Shipped:** deterministic meal-text parsing (`MealLogService.estimateMacros`). It surfaces only macros the user explicitly typed and sums known foods named in one message — it never guesses portions from a bare food name. This is the high/medium-confidence capture path; the model-backed low-confidence estimator below is still pending.
 - Keep the current backend rule: unmatched meal photos are accepted for future routing but do not invent macros yet.
 - Add a `meal_photo_estimates` queue/table or file-backed dev queue that stores only a local asset pointer, bounded food labels, macro estimates, confidence, and model metadata.
 - Route first-pass estimates through a cheap vision model and require manual confirmation before a meal affects coaching.
